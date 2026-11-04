@@ -86,7 +86,7 @@
                 <!-- Inventory Tab -->
                 <section id="tab-inventory" class="hidden h-full flex flex-col gap-4">
                     <div class="bg-white p-4 rounded border flex justify-between items-center">
-                        <h3 class="font-bold text-slate-700">Gestión de Productos e Inventario (Entradas y Salidas)</h3>
+                        <h3 class="font-bold text-slate-700">Gestión de Productos e Inventario</h3>
                         <button onclick="openProductModal()" class="bg-brand-blue text-white px-4 py-2 rounded text-sm hover:bg-sky-600">+ Nuevo Producto</button>
                     </div>
                     <div class="bg-white rounded border overflow-hidden flex-1">
@@ -207,7 +207,7 @@
         </div>
     </div>
 
-    <!-- Modal Movimiento Inventario (Entrada / Salida) -->
+    <!-- Modal Movimiento Inventario -->
     <div id="modal-movement" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg w-96 space-y-4">
             <h3 class="font-bold text-lg text-slate-800" id="mov-title">Registrar Movimiento</h3>
@@ -265,8 +265,9 @@
             totalSalesUsd: 0,
             products: [
                 { id: 1, name: 'Harina P.A.N.', sku: 'ALM-001', cat: 'Víveres', unit: 'Unid', stock: 120, cost: 1.00, price: 1.40 },
-                { id: 2, name: 'Tomate Perita', sku: 'HOR-001', cat: 'Frutas y Hortalizas', unit: 'Kg', stock: 50.0, cost: 0.80, price: 1.50 },
-                { id: 3, name: 'Queso Duro', sku: 'CHA-001', cat: 'Charcutería', unit: 'Kg', stock: 20.0, cost: 4.00, price: 6.00 }
+                { id: 2, name: 'Cebolla', sku: 'HOR-001', cat: 'Frutas y Hortalizas', unit: 'Kg', stock: 50.0, cost: 0.80, price: 1.50 },
+                { id: 3, name: 'Tomate Perita', sku: 'HOR-002', cat: 'Frutas y Hortalizas', unit: 'Kg', stock: 40.0, cost: 0.90, price: 1.80 },
+                { id: 4, name: 'Queso Duro', sku: 'CHA-001', cat: 'Charcutería', unit: 'Kg', stock: 20.0, cost: 4.00, price: 6.00 }
             ],
             cart: [],
             customers: [
@@ -306,6 +307,22 @@
             grid.innerHTML = '';
             filtered.forEach(p => {
                 const priceBs = (p.price * state.rate).toFixed(2);
+                
+                // Si es por Kg, mostramos un campo de entrada rápida de peso en la misma tarjeta del producto
+                let actionHtml = '';
+                if(p.unit === 'Kg') {
+                    actionHtml = `
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="input-qty-${p.id}" step="0.05" value="1.00" class="border w-16 text-center rounded p-1 text-xs font-bold bg-slate-50">
+                            <button onclick="addKgToCart(${p.id})" class="bg-brand-blue hover:bg-sky-600 text-white px-2.5 py-1 rounded text-xs transition-colors font-semibold" title="Agregar peso al carrito">Agregar</button>
+                        </div>
+                    `;
+                } else {
+                    actionHtml = `
+                        <button onclick="addToCart(${p.id})" class="bg-slate-100 hover:bg-brand-blue hover:text-white p-2 rounded text-xs transition-colors"><i class="fa-solid fa-plus"></i> Añadir</button>
+                    `;
+                }
+
                 grid.innerHTML += `
                     <div class="bg-white p-3 rounded border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
@@ -313,12 +330,12 @@
                             <div class="font-bold text-sm text-slate-800 mt-1 truncate">${p.name}</div>
                             <div class="text-xs text-slate-400">${p.sku} | Stock: ${p.stock} ${p.unit}</div>
                         </div>
-                        <div class="flex justify-between items-center mt-3">
+                        <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-100">
                             <div>
                                 <div class="font-bold text-brand-blue">$${p.price.toFixed(2)} <span class="text-[10px] font-normal text-slate-500">/${p.unit}</span></div>
                                 <div class="text-[11px] font-semibold text-emerald-700">${priceBs} Bs</div>
                             </div>
-                            <button onclick="addToCart(${p.id})" class="bg-slate-100 hover:bg-brand-blue hover:text-white p-2 rounded text-xs transition-colors"><i class="fa-solid fa-plus"></i></button>
+                            <div>${actionHtml}</div>
                         </div>
                     </div>
                 `;
@@ -330,12 +347,29 @@
             if(!prod || prod.stock <= 0) return alert('Producto sin disponibilidad en inventario');
             
             const existing = state.cart.find(c => c.id === pid);
-            let addAmount = prod.unit === 'Kg' ? 1.0 : 1;
-
             if (existing) {
-                existing.qty += addAmount;
+                if(existing.qty + 1 > prod.stock) return alert('Supera el stock disponible');
+                existing.qty += 1;
             } else {
-                state.cart.push({...prod, qty: addAmount});
+                state.cart.push({...prod, qty: 1});
+            }
+            render();
+        }
+
+        function addKgToCart(pid) {
+            const prod = state.products.find(p => p.id === pid);
+            const inputVal = document.getElementById(`input-qty-${pid}`).value;
+            let kgToAdd = parseFloat(inputVal);
+
+            if(!prod || isNaN(kgToAdd) || kgToAdd <= 0) return alert('Ingresa una cantidad de kilogramos válida');
+            if(kgToAdd > prod.stock) return alert('La cantidad supera el stock disponible en inventario');
+
+            const existing = state.cart.find(c => c.id === pid);
+            if (existing) {
+                if(existing.qty + kgToAdd > prod.stock) return alert('Supera el stock disponible');
+                existing.qty += kgToAdd;
+            } else {
+                state.cart.push({...prod, qty: kgToAdd});
             }
             render();
         }
@@ -443,7 +477,6 @@
             }
         }
 
-        // Gestión de Entradas y Salidas de Inventario
         function openMovementModal(id) {
             const prod = state.products.find(p => p.id === id);
             if(!prod) return;
@@ -524,7 +557,7 @@
         }
 
         function render() {
-            filterProducts('');
+            filterProducts(document.querySelector('#tab-pos input[type="text"]').value || '');
             
             // Tabla Inventario
             const invBody = document.getElementById('inventory-table-body');
@@ -635,3 +668,4 @@
     </script>
 </body>
 </html>
+
