@@ -311,4 +311,350 @@
                 b.classList.remove('bg-brand-blue');
                 b.classList.add('hover:bg-slate-800');
             });
-            const activ
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('hover:bg-slate-800');
+                activeBtn.classList.add('bg-brand-blue');
+            }
+            render();
+        }
+
+        function updateRate(val) {
+            state.rate = parseFloat(val) || 1;
+            document.getElementById('bcv-display').innerText = state.rate.toFixed(2);
+            document.getElementById('bcv-input').value = state.rate.toFixed(2);
+            render();
+        }
+
+        function filterProducts(query) {
+            renderProducts(query);
+        }
+
+        function render() {
+            renderProducts('');
+            renderCart();
+            renderInventory();
+            renderCredits();
+            renderFinance();
+        }
+
+        function renderProducts(filter = '') {
+            const grid = document.getElementById('products-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            
+            const filtered = state.products.filter(p => 
+                p.name.toLowerCase().includes(filter.toLowerCase()) || 
+                p.sku.toLowerCase().includes(filter.toLowerCase()) ||
+                p.cat.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            filtered.forEach(p => {
+                const priceBs = (p.price * state.rate).toFixed(2);
+                let actionHtml = '';
+                if(p.unit === 'Kg') {
+                    actionHtml = `
+                        <div class="flex items-center gap-1 mt-2">
+                            <input type="number" id="qty-${p.id}" value="1.00" step="0.1" class="w-16 p-1 border rounded text-xs text-center font-bold">
+                            <button onclick="addKgToCart(${p.id})" class="flex-1 bg-brand-blue text-white text-xs py-1.5 rounded hover:bg-sky-600 font-semibold">Agregar Kg</button>
+                        </div>`;
+                } else {
+                    actionHtml = `
+                        <button onclick="addUnitToCart(${p.id})" class="w-full mt-2 bg-brand-blue text-white text-xs py-1.5 rounded hover:bg-sky-600 font-semibold">+ Añadir</button>`;
+                }
+
+                grid.innerHTML += `
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-slate-400">${p.cat}</span>
+                            <h4 class="font-bold text-sm text-slate-800">${p.name}</h4>
+                            <div class="text-xs text-slate-500 mt-1">Stock: <b>${p.stock}</b> ${p.unit}</div>
+                        </div>
+                        <div class="mt-2 pt-2 border-t border-slate-100">
+                            <div class="flex justify-between items-center text-sm font-bold text-brand-navy">
+                                <span>$${p.price.toFixed(2)}</span>
+                                <span class="text-xs text-slate-500 font-normal">${priceBs} Bs</span>
+                            </div>
+                            ${actionHtml}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function addUnitToCart(id) {
+            const prod = state.products.find(p => p.id === id);
+            if(!prod || prod.stock <= 0) return alert('Producto sin stock disponible.');
+            
+            let item = state.cart.find(i => i.id === id);
+            if(item) {
+                if(item.qty + 1 > prod.stock) return alert('No hay suficiente stock.');
+                item.qty += 1;
+            } else {
+                state.cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1, unit: prod.unit });
+            }
+            renderCart();
+        }
+
+        function addKgToCart(id) {
+            const prod = state.products.find(p => p.id === id);
+            const inputVal = parseFloat(document.getElementById(`qty-${id}`).value) || 0;
+            if(inputVal <= 0) return alert('Ingrese un peso válido.');
+            if(inputVal > prod.stock) return alert('El peso supera el stock disponible.');
+
+            let item = state.cart.find(i => i.id === id);
+            if(item) {
+                if(item.qty + inputVal > prod.stock) return alert('Stock insuficiente.');
+                item.qty += inputVal;
+            } else {
+                state.cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: inputVal, unit: prod.unit });
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            if(!container) return;
+            container.innerHTML = '';
+            let subtotal = 0;
+
+            state.cart.forEach((item, index) => {
+                const totalItem = item.price * item.qty;
+                subtotal += totalItem;
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded text-sm">
+                        <div>
+                            <div class="font-semibold">${item.name}</div>
+                            <div class="text-xs text-slate-500">${item.qty} ${item.unit} x $${item.price.toFixed(2)}</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">$${totalItem.toFixed(2)}</span>
+                            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+
+            const totalBs = subtotal * state.rate;
+            document.getElementById('cart-subtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('cart-total').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('cart-total-bs').innerText = `${totalBs.toFixed(2)} Bs`;
+        }
+
+        function removeFromCart(index) {
+            state.cart.splice(index, 1);
+            renderCart();
+        }
+
+        function clearCart() {
+            state.cart = [];
+            renderCart();
+        }
+
+        async function checkout(type) {
+            if(state.cart.length === 0) return alert('El carrito está vacío.');
+            let total = state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+
+            // Descontar inventario localmente y en Supabase
+            for(let item of state.cart) {
+                let prod = state.products.find(p => p.id === item.id);
+                if(prod) {
+                    prod.stock = Math.max(0, prod.stock - item.qty);
+                    if(supabaseClient) {
+                        await supabaseClient.from('productos').update({ stock: prod.stock }).eq('id', prod.id);
+                    }
+                }
+            }
+
+            state.totalSalesUsd += total;
+            prepareTicket(type, total);
+            window.print();
+            state.cart = [];
+            render();
+        }
+
+        function prepareTicket(type, total) {
+            document.getElementById('ticket-date').innerText = new Date().toLocaleString();
+            let itemsHtml = '';
+            state.cart.forEach(i => {
+                itemsHtml += `<div class="flex justify-between"><span>${i.qty}x ${i.name}</span><span>$${(i.price*i.qty).toFixed(2)}</span></div>`;
+            });
+            document.getElementById('ticket-items').innerHTML = itemsHtml;
+            document.getElementById('ticket-total').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('ticket-total-bs').innerText = `${(total * state.rate).toFixed(2)} Bs`;
+        }
+
+        function renderInventory() {
+            const tbody = document.getElementById('inventory-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            state.products.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50 text-sm">
+                        <td class="p-3 font-semibold">${p.name}</td>
+                        <td class="p-3 text-slate-500">${p.sku}</td>
+                        <td class="p-3">${p.cat}</td>
+                        <td class="p-3 font-bold">${p.stock} ${p.unit}</td>
+                        <td class="p-3">$${p.cost.toFixed(2)}</td>
+                        <td class="p-3 text-brand-blue font-bold">$${p.price.toFixed(2)}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="openMovementModal(${p.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs font-semibold"><i class="fa-solid fa-arrows-rotate"></i> Ajustar Stock</button>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteProduct(${p.id})" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function openProductModal() { document.getElementById('modal-product').classList.remove('hidden'); }
+        function closeProductModal() { document.getElementById('modal-product').classList.add('hidden'); }
+
+        async function saveProduct() {
+            const name = document.getElementById('p-name').value;
+            const sku = document.getElementById('p-sku').value;
+            const cat = document.getElementById('p-cat').value;
+            const unit = document.getElementById('p-unit').value;
+            const stock = parseFloat(document.getElementById('p-stock').value) || 0;
+            const cost = parseFloat(document.getElementById('p-cost').value) || 0;
+            const price = parseFloat(document.getElementById('p-price').value) || 0;
+
+            if(!name) return alert('Ingrese el nombre del producto.');
+
+            const newProd = { name, sku, cat, unit, stock, cost, price };
+
+            if(supabaseClient) {
+                const { data, error } = await supabaseClient.from('productos').insert([newProd]).select();
+                if(!error && data) {
+                    newProd.id = data[0].id;
+                } else {
+                    newProd.id = Date.now();
+                }
+            } else {
+                newProd.id = Date.now();
+            }
+
+            state.products.push(newProd);
+            closeProductModal();
+            render();
+        }
+
+        async function deleteProduct(id) {
+            if(!confirm('¿Seguro que deseas eliminar este producto?')) return;
+            state.products = state.products.filter(p => p.id !== id);
+            if(supabaseClient) {
+                await supabaseClient.from('productos').delete().eq('id', id);
+            }
+            render();
+        }
+
+        function openMovementModal(id) {
+            state.activeProductForMovement = state.products.find(p => p.id === id);
+            document.getElementById('mov-prod-info').innerText = `Producto: ${state.activeProductForMovement.name} (Stock actual: ${state.activeProductForMovement.stock} ${state.activeProductForMovement.unit})`;
+            document.getElementById('modal-movement').classList.remove('hidden');
+        }
+        function closeMovementModal() { document.getElementById('modal-movement').classList.add('hidden'); }
+
+        async function confirmMovement() {
+            const type = document.getElementById('mov-type').value;
+            const amount = parseFloat(document.getElementById('mov-amount').value) || 0;
+            if(amount <= 0) return alert('Ingrese una cantidad válida.');
+
+            if(type === 'in') {
+                state.activeProductForMovement.stock += amount;
+            } else {
+                state.activeProductForMovement.stock = Math.max(0, state.activeProductForMovement.stock - amount);
+            }
+
+            if(supabaseClient) {
+                await supabaseClient.from('productos').update({ stock: state.activeProductForMovement.stock }).eq('id', state.activeProductForMovement.id);
+            }
+
+            closeMovementModal();
+            render();
+        }
+
+        function renderCredits() {
+            const tbody = document.getElementById('credits-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            let totalDebtUsd = 0;
+
+            state.customers.forEach(c => {
+                totalDebtUsd += c.debt;
+                const debtBs = c.debt * state.rate;
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50 text-sm">
+                        <td class="p-3 font-semibold">${c.name}</td>
+                        <td class="p-3 font-bold text-red-600">$${c.debt.toFixed(2)}</td>
+                        <td class="p-3 text-slate-500">${debtBs.toFixed(2)} Bs</td>
+                        <td class="p-3">$${c.limit.toFixed(2)}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="openAbonoModal(${c.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-semibold">Registrar Abono</button>
+                        </td>
+                    </tr>`;
+            });
+
+            document.getElementById('total-debt').innerText = `$${totalDebtUsd.toFixed(2)}`;
+            document.getElementById('total-debt-bs').innerText = `${(totalDebtUsd * state.rate).toFixed(2)} Bs`;
+        }
+
+        function openCustomerModal() { document.getElementById('modal-customer').classList.remove('hidden'); }
+        function closeCustomerModal() { document.getElementById('modal-customer').classList.add('hidden'); }
+        function saveCustomer() {
+            const name = document.getElementById('c-name').value;
+            const limit = parseFloat(document.getElementById('c-limit').value) || 0;
+            if(!name) return alert('Ingrese el nombre del cliente.');
+            state.customers.push({ id: Date.now(), name, debt: 0, limit });
+            closeCustomerModal();
+            render();
+        }
+
+        function openAbonoModal(id) {
+            state.selectedCustomerForAbono = state.customers.find(c => c.id === id);
+            document.getElementById('abono-client-name').innerText = `Cliente: ${state.selectedCustomerForAbono.name} (Deuda actual: $${state.selectedCustomerForAbono.debt.toFixed(2)})`;
+            document.getElementById('modal-abono').classList.remove('hidden');
+        }
+        function closeAbonoModal() { document.getElementById('modal-abono').classList.add('hidden'); }
+        function confirmAbono() {
+            const amount = parseFloat(document.getElementById('abono-amount').value) || 0;
+            if(amount <= 0) return alert('Ingrese un monto válido.');
+            state.selectedCustomerForAbono.debt = Math.max(0, state.selectedCustomerForAbono.debt - amount);
+            closeAbonoModal();
+            render();
+        }
+
+        function renderFinance() {
+            let totalCost = 0;
+            state.products.forEach(p => {
+                totalCost += (p.cost * p.stock);
+            });
+            let profit = state.totalSalesUsd - totalCost;
+
+            document.getElementById('finance-sales-usd').innerText = `$${state.totalSalesUsd.toFixed(2)}`;
+            document.getElementById('finance-sales-bs').innerText = `${(state.totalSalesUsd * state.rate).toFixed(2)} Bs`;
+            document.getElementById('finance-cost-usd').innerText = `$${totalCost.toFixed(2)}`;
+            document.getElementById('finance-cost-bs').innerText = `${(totalCost * state.rate).toFixed(2)} Bs`;
+            document.getElementById('finance-profit-usd').innerText = `$${profit.toFixed(2)}`;
+            document.getElementById('finance-profit-bs').innerText = `${(profit * state.rate).toFixed(2)} Bs`;
+
+            const tbody = document.getElementById('finance-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            state.products.forEach(p => {
+                const gananciaUnit = p.price - p.cost;
+                const margen = p.cost > 0 ? ((gananciaUnit / p.cost) * 100).toFixed(1) : 0;
+                tbody.innerHTML += `
+                    <tr class="border-b text-sm">
+                        <td class="p-3 font-semibold">${p.name}</td>
+                        <td class="p-3">${p.unit}</td>
+                        <td class="p-3">$${p.cost.toFixed(2)}</td>
+                        <td class="p-3 font-bold text-brand-blue">$${p.price.toFixed(2)}</td>
+                        <td class="p-3 font-bold text-emerald-600">+$${gananciaUnit.toFixed(2)}</td>
+                        <td class="p-3"><span class="bg-sky-100 text-brand-blue px-2 py-0.5 rounded text-xs font-bold">${margen}%</span></td>
+                    </tr>`;
+            });
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
