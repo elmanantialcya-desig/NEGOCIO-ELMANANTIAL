@@ -1,342 +1,314 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>El Manantial - Punto de Venta</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: '#1e3a8a',
-            accent: '#3b82f6',
-            light: '#f8fafc'
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema El Manantial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#0F172A',
+                            blue: '#0284C7',
+                            beige: '#F5F3EF',
+                            light: '#F8FAFC'
+                        }
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-  <style>
-    body { background-color: #f8fafc; font-family: sans-serif; }
-    @media print {
-      body { visibility: hidden; }
-      .ticket-printable { visibility: visible; position: absolute; left: 0; top: 0; width: 58mm; }
-    }
-  </style>
+    </script>
+    <style>
+        body { background-color: #F8FAFC; font-family: sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-printable, #ticket-printable * { visibility: visible; }
+            #ticket-printable { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
 </head>
-<body class="bg-light text-slate-800 flex h-screen overflow-hidden">
+<body class="text-slate-800">
+    <div id="app" class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-brand-navy text-white flex flex-col hidden md:flex">
+            <div class="p-5 text-xl font-bold border-b border-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-water text-brand-blue"></i> El Manantial
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="switchTab('pos')" id="btn-pos" class="w-full text-left p-3 rounded bg-brand-blue flex items-center gap-3"><i class="fa-solid fa-cart-shopping"></i> Punto de Venta</button>
+                <button onclick="switchTab('inventory')" id="btn-inventory" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-box"></i> Inventario</button>
+                <button onclick="switchTab('credits')" id="btn-credits" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-handshake-angle"></i> Fiados y Créditos</button>
+                <button onclick="switchTab('finance')" id="btn-finance" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-chart-line"></i> Contabilidad y Margen</button>
+            </nav>
+            <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
+                Tasa del Día: <span id="bcv-display" class="font-bold text-white">36.50</span> Bs/$
+            </div>
+        </aside>
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-brand text-white flex flex-col justify-between hidden md:flex">
-    <div class="p-5">
-      <h1 class="text-xl font-bold flex items-center gap-2">🛒 El Manantial</h1>
-      <nav class="mt-8 space-y-2">
-        <button onclick="switchTab('pos')" class="w-full text-left px-4 py-2.5 rounded bg-accent text-white flex items-center gap-3">Punto de Venta</button>
-        <button onclick="switchTab('inventory')" class="w-full text-left px-4 py-2.5 rounded hover:bg-blue-900 flex items-center gap-3">Inventario</button>
-        <button onclick="switchTab('credits')" class="w-full text-left px-4 py-2.5 rounded hover:bg-blue-900 flex items-center gap-3">Fiados y Créditos</button>
-        <button onclick="switchTab('accounting')" class="w-full text-left px-4 py-2.5 rounded hover:bg-blue-900 flex items-center gap-3">Contabilidad y Margen</button>
-      </nav>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+                <h2 id="page-title" class="text-lg font-semibold text-slate-700">Punto de Venta</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs text-slate-500 font-semibold">Tasa del día (Bs/$):</span>
+                    <input type="number" id="bcv-input" value="36.50" step="0.01" onchange="updateRate(this.value)" class="border p-1 w-24 rounded text-sm font-bold text-brand-navy" placeholder="Tasa BCV">
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- POS Tab -->
+                <section id="tab-pos" class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div class="col-span-2 flex flex-col gap-4">
+                        <input type="text" placeholder="Buscar producto por nombre, SKU o categoría..." oninput="filterProducts(this.value)" class="p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue bg-white">
+                        <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1 content-start overflow-y-auto"></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-slate-200 flex flex-col justify-between shadow-sm">
+                        <div>
+                            <h3 class="font-bold border-b pb-2 mb-3 flex justify-between"><span>Carrito de Compra</span><button onclick="clearCart()" class="text-xs text-red-500 hover:underline">Vaciar</button></h3>
+                            <div id="cart-items" class="space-y-3 max-h-80 overflow-y-auto"></div>
+                        </div>
+                        <div class="border-t pt-3 mt-4 space-y-2">
+                            <div class="flex justify-between text-sm"><span>Subtotal:</span><span id="cart-subtotal">$0.00</span></div>
+                            <div class="flex justify-between text-lg font-bold text-slate-900"><span>Total USD:</span><span id="cart-total">$0.00</span></div>
+                            <div class="flex justify-between text-sm font-bold text-brand-blue bg-sky-50 p-2 rounded"><span>Total Bolívares:</span><span id="cart-total-bs">0.00 Bs</span></div>
+                            <div class="grid grid-cols-2 gap-2 pt-2">
+                                <button onclick="checkout('Contado')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded font-semibold text-sm">Venta Contado</button>
+                                <button onclick="checkout('Financiado')" class="w-full bg-brand-blue hover:bg-sky-600 text-white py-2 rounded font-semibold text-sm">Venta Fiada</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Inventory Tab -->
+                <section id="tab-inventory" class="hidden h-full flex flex-col gap-4">
+                    <div class="bg-white p-4 rounded border flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700">Gestión de Productos e Inventario</h3>
+                        <button onclick="openProductModal()" class="bg-brand-blue text-white px-4 py-2 rounded text-sm hover:bg-sky-600">+ Nuevo Producto</button>
+                    </div>
+                    <div class="bg-white rounded border overflow-hidden flex-1 overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase sticky top-0">
+                                <tr>
+                                    <th class="p-3">Nombre</th>
+                                    <th class="p-3">SKU</th>
+                                    <th class="p-3">Categoría</th>
+                                    <th class="p-3">Stock / Peso Actual</th>
+                                    <th class="p-3">Costo ($)</th>
+                                    <th class="p-3">Precio ($)</th>
+                                    <th class="p-3 text-center">Movimientos</th>
+                                    <th class="p-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Credits Tab -->
+                <section id="tab-credits" class="hidden h-full flex flex-col gap-4">
+                    <div class="flex justify-between items-center bg-white p-4 rounded border">
+                        <div>
+                            <span class="text-xs text-slate-400">Total Cuentas por Cobrar</span>
+                            <div id="total-debt" class="text-2xl font-bold text-red-600">$0.00</div>
+                            <div id="total-debt-bs" class="text-xs text-slate-500">0.00 Bs</div>
+                        </div>
+                        <button onclick="openCustomerModal()" class="bg-brand-blue text-white px-4 py-2 rounded text-sm hover:bg-sky-600">+ Agregar Cliente</button>
+                    </div>
+                    <div class="bg-white rounded border overflow-hidden flex-1 overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase sticky top-0">
+                                <tr>
+                                    <th class="p-3">Cliente</th>
+                                    <th class="p-3">Deuda ($)</th>
+                                    <th class="p-3">Deuda (Bs)</th>
+                                    <th class="p-3">Límite ($)</th>
+                                    <th class="p-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="credits-table-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Finance Tab -->
+                <section id="tab-finance" class="hidden h-full flex flex-col gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded border shadow-sm">
+                            <span class="text-xs text-slate-400 uppercase font-semibold">Ventas Totales Registradas</span>
+                            <div id="finance-sales-usd" class="text-2xl font-bold text-slate-800">$0.00</div>
+                            <div id="finance-sales-bs" class="text-xs text-slate-500">0.00 Bs</div>
+                        </div>
+                        <div class="bg-white p-4 rounded border shadow-sm">
+                            <span class="text-xs text-slate-400 uppercase font-semibold">Inversión en Costo de Mercancía</span>
+                            <div id="finance-cost-usd" class="text-2xl font-bold text-slate-600">$0.00</div>
+                            <div id="finance-cost-bs" class="text-xs text-slate-500">0.00 Bs</div>
+                        </div>
+                        <div class="bg-white p-4 rounded border shadow-sm bg-emerald-50 border-emerald-200">
+                            <span class="text-xs text-emerald-700 uppercase font-bold">Ganancia Bruta Estimada</span>
+                            <div id="finance-profit-usd" class="text-2xl font-bold text-emerald-600">$0.00</div>
+                            <div id="finance-profit-bs" class="text-xs text-emerald-800">0.00 Bs</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded border overflow-hidden flex-1 p-4 overflow-y-auto">
+                        <h4 class="font-bold text-slate-700 mb-3">Análisis de Margen de Ganancia por Producto / Kg</h4>
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase sticky top-0">
+                                <tr>
+                                    <th class="p-3">Producto</th>
+                                    <th class="p-3">Unidad</th>
+                                    <th class="p-3">Costo ($)</th>
+                                    <th class="p-3">Venta ($)</th>
+                                    <th class="p-3">Ganancia ($)</th>
+                                    <th class="p-3">Margen %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="finance-table-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
     </div>
-  </aside>
 
-  <!-- Main Content -->
-  <main class="flex-1 flex flex-col h-screen overflow-y-auto">
-    <header class="bg-white border-b border-slate-200 p-4 flex justify-between items-center">
-      <h2 id="current-tab-title" class="text-xl font-semibold">Punto de Venta</h2>
-      <div class="flex items-center gap-4">
-        <span class="text-sm bg-blue-100 text-brand px-3 py-1 rounded font-medium">Tasa del día (Bs/S): <strong id="tasa-display">0.00</strong></span>
-      </div>
-    </header>
-
-    <div class="p-6 flex-1">
-      <!-- Seccion POS -->
-      <div id="section-pos" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-4">
-          <input type="text" id="pos-search" oninput="filterProducts()" placeholder="Buscar producto por nombre, SKU o categoría..." class="w-full p-3 border rounded-lg bg-white shadow-sm">
-          <div id="pos-product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <!-- Productos cargados por JS -->
-          </div>
-        </div>
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
-          <div>
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="font-bold text-lg">Carrito de Compra</h3>
-              <button onclick="clearCart()" class="text-xs text-red-500 hover:underline">Vaciar</button>
+    <!-- Modals -->
+    <div id="modal-product" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-96 space-y-4 shadow-xl">
+            <h3 class="font-bold text-lg text-slate-800">Registrar Nuevo Producto</h3>
+            <input type="text" id="p-name" placeholder="Nombre del producto" class="w-full p-2 border rounded">
+            <input type="text" id="p-sku" placeholder="SKU / Código" class="w-full p-2 border rounded">
+            <div class="grid grid-cols-2 gap-2">
+                <select id="p-cat" class="w-full p-2 border rounded bg-white">
+                    <option value="Víveres">Víveres</option>
+                    <option value="Charcutería">Charcutería</option>
+                    <option value="Frutas y Hortalizas">Frutas y Hortalizas</option>
+                    <option value="Lácteos">Lácteos</option>
+                    <option value="Bebidas">Bebidas</option>
+                    <option value="Limpieza">Limpieza</option>
+                    <option value="Otros">Otros</option>
+                </select>
+                <select id="p-unit" class="w-full p-2 border rounded bg-white">
+                    <option value="Unid">Unidades (Unid)</option>
+                    <option value="Kg">Kilogramos (Kg)</option>
+                </select>
             </div>
-            <div id="cart-items" class="space-y-3 max-h-96 overflow-y-auto">
-              <!-- Items del carrito -->
+            <input type="number" id="p-stock" step="0.01" placeholder="Stock Inicial" class="w-full p-2 border rounded">
+            <input type="number" id="p-cost" step="0.01" placeholder="Precio Costo ($)" class="w-full p-2 border rounded">
+            <input type="number" id="p-price" step="0.01" placeholder="Precio Venta ($)" class="w-full p-2 border rounded">
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeProductModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
+                <button onclick="saveProduct()" class="px-4 py-2 bg-brand-blue text-white rounded">Guardar</button>
             </div>
-          </div>
-          <div class="border-t pt-4 mt-4 space-y-2">
-            <div class="flex justify-between font-bold text-lg">
-              <span>Total USD:</span>
-              <span id="cart-total-usd">$0.00</span>
-            </div>
-            <div class="flex justify-between text-sm text-slate-500">
-              <span>Total Bs:</span>
-              <span id="cart-total-bs">Bs 0.00</span>
-            </div>
-            <button onclick="checkout()" class="w-full bg-brand text-white py-3 rounded-lg font-bold hover:bg-blue-900 mt-2">Procesar Venta</button>
-          </div>
         </div>
-      </div>
-
-      <!-- Seccion Inventario -->
-      <div id="section-inventory" class="hidden space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="text-lg font-bold">Gestión de Productos</h3>
-          <button onclick="openProductModal()" class="bg-brand text-white px-4 py-2 rounded-lg text-sm">+ Nuevo Producto</button>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <table class="w-full text-left border-collapse">
-            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase">
-              <tr>
-                <th class="p-3">Nombre</th>
-                <th class="p-3">SKU</th>
-                <th class="p-3">Categoría</th>
-                <th class="p-3">Stock</th>
-                <th class="p-3">Costo</th>
-                <th class="p-3">Precio</th>
-                <th class="p-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="inventory-table-body" class="divide-y text-sm">
-              <!-- Inventario cargado por JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Seccion Creditos -->
-      <div id="section-credits" class="hidden">
-        <h3 class="text-lg font-bold mb-4">Control de Fiados y Clientes</h3>
-        <p class="text-slate-500">Módulo de créditos pendiente de actividad.</p>
-      </div>
-
-      <!-- Seccion Contabilidad -->
-      <div id="section-accounting" class="hidden">
-        <h3 class="text-lg font-bold mb-4">Resumen Contable y Márgenes</h3>
-        <p class="text-slate-500">Módulo de contabilidad activo.</p>
-      </div>
     </div>
-  </main>
 
-  <!-- Modal Producto -->
-  <div id="product-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center">
-    <div class="bg-white p-6 rounded-xl w-96 space-y-4">
-      <h3 class="font-bold text-lg" id="modal-title">Agregar Producto</h3>
-      <input type="hidden" id="prod-id">
-      <div>
-        <label class="text-xs text-slate-500">Nombre</label>
-        <input type="text" id="prod-name" class="w-full p-2 border rounded">
-      </div>
-      <div>
-        <label class="text-xs text-slate-500">SKU</label>
-        <input type="text" id="prod-sku" class="w-full p-2 border rounded">
-      </div>
-      <div>
-        <label class="text-xs text-slate-500">Categoría</label>
-        <input type="text" id="prod-category" class="w-full p-2 border rounded">
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="text-xs text-slate-500">Stock</label>
-          <input type="number" id="prod-stock" class="w-full p-2 border rounded">
-        </div>
-        <div>
-          <label class="text-xs text-slate-500">Costo ($)</label>
-          <input type="number" step="0.01" id="prod-cost" class="w-full p-2 border rounded">
-        </div>
-      </div>
-      <div>
-        <label class="text-xs text-slate-500">Precio ($)</label>
-        <input type="number" step="0.01" id="prod-price" class="w-full p-2 border rounded">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeProductModal()" class="px-4 py-2 text-slate-500">Cancelar</button>
-        <button onclick="saveProduct()" class="px-4 py-2 bg-brand text-white rounded">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // CONFIGURACIÓN SUPABASE (Reemplaza con tus credenciales reales si es necesario)
-    const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
-    const SUPABASE_KEY = 'tu-clave-anon';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let state = {
-      tasa: 880.90,
-      products: [],
-      cart: []
-    };
-
-    async function initApp() {
-      document.getElementById('tasa-display').innerText = state.tasa.toFixed(2);
-      await fetchProducts();
-    }
-
-    async function fetchProducts() {
-      const { data, error } = await supabaseClient.from('productos').select('*');
-      if (error) {
-        console.error('Error al cargar productos:', error);
-        // Datos de respaldo locales si falla la red
-        state.products = [
-          { id: 1, name: 'Harina P.A.N.', sku: 'ALM-001', category: 'Víveres', stock: 120, cost: 1.00, price: 1.40 },
-          { id: 2, name: 'Cebolla', sku: 'HOR-001', category: 'Hortalizas', stock: 50, cost: 1.10, price: 1.50 }
-        ];
-      } else {
-        state.products = data || [];
-      }
-      render();
-    }
-
-    function switchTab(tab) {
-      ['pos', 'inventory', 'credits', 'accounting'].forEach(t => {
-        document.getElementById(`section-${t}`).classList.add('hidden');
-      });
-      document.getElementById(`section-${tab}`).classList.remove('hidden');
-      render();
-    }
-
-    function render() {
-      renderPOS();
-      renderInventory();
-    }
-
-    function renderPOS() {
-      const grid = document.getElementById('pos-product-grid');
-      const search = document.getElementById('pos-search').value.toLowerCase();
-      grid.innerHTML = state.products
-        .filter(p => p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search))
-        .map(p => `
-          <div onclick="addToCart(${p.id})" class="bg-white p-3 rounded-lg border shadow-sm cursor-pointer hover:border-brand">
-            <span class="text-xs text-slate-400 uppercase">${p.category}</span>
-            <h4 class="font-bold text-sm truncate">${p.name}</h4>
-            <div class="flex justify-between items-center mt-2">
-              <span class="text-brand font-bold">$${p.price.toFixed(2)}</span>
-              <span class="text-xs text-slate-500">Stock: ${p.stock}</span>
+    <div id="modal-movement" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-96 space-y-4 shadow-xl">
+            <h3 class="font-bold text-lg text-slate-800" id="mov-title">Registrar Movimiento</h3>
+            <p id="mov-prod-info" class="text-xs text-slate-500"></p>
+            <select id="mov-type" class="w-full p-2 border rounded bg-white font-semibold">
+                <option value="in">➕ Registrar Entrada (Nuevo ingreso)</option>
+                <option value="out">➖ Registrar Salida (Merma / Ajuste)</option>
+            </select>
+            <input type="number" id="mov-amount" step="0.01" placeholder="Cantidad o Kilogramos" class="w-full p-2 border rounded">
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeMovementModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
+                <button onclick="confirmMovement()" class="px-4 py-2 bg-brand-blue text-white rounded">Aplicar</button>
             </div>
-          </div>
-        `).join('');
-
-      const cartContainer = document.getElementById('cart-items');
-      cartContainer.innerHTML = state.cart.map((item, index) => `
-        <div class="flex justify-between items-center text-sm border-b pb-2">
-          <div>
-            <p class="font-medium">${item.name}</p>
-            <p class="text-xs text-slate-500">$${item.price.toFixed(2)} x ${item.qty}</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="font-bold">$${(item.price * item.qty).toFixed(2)}</span>
-            <button onclick="removeFromCart(${index})" class="text-red-500 text-xs">✕</button>
-          </div>
         </div>
-      `).join('');
+    </div>
 
-      let totalUsd = state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-      document.getElementById('cart-total-usd').innerText = `$${totalUsd.toFixed(2)}`;
-      document.getElementById('cart-total-bs').innerText = `Bs ${(totalUsd * state.tasa).toFixed(2)}`;
-    }
+    <div id="modal-customer" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-96 space-y-4 shadow-xl">
+            <h3 class="font-bold text-lg text-slate-800">Agregar Nuevo Cliente</h3>
+            <input type="text" id="c-name" placeholder="Nombre completo" class="w-full p-2 border rounded">
+            <input type="number" id="c-limit" step="0.01" placeholder="Límite de crédito ($ USD)" class="w-full p-2 border rounded">
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeCustomerModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
+                <button onclick="saveCustomer()" class="px-4 py-2 bg-brand-blue text-white rounded">Guardar</button>
+            </div>
+        </div>
+    </div>
 
-    function renderInventory() {
-      const tbody = document.getElementById('inventory-table-body');
-      tbody.innerHTML = state.products.map(p => `
-        <tr class="border-b">
-          <td class="p-3 font-medium">${p.name}</td>
-          <td class="p-3 text-slate-500">${p.sku}</td>
-          <td class="p-3">${p.category}</td>
-          <td class="p-3">${p.stock}</td>
-          <td class="p-3">$${p.cost.toFixed(2)}</td>
-          <td class="p-3 font-bold text-brand">$${p.price.toFixed(2)}</td>
-          <td class="p-3 text-right">
-            <button onclick="deleteProduct(${p.id})" class="text-red-500 text-xs hover:underline">Eliminar</button>
-          </td>
-        </tr>
-      `).join('');
-    }
+    <div id="modal-abono" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-80 space-y-4 shadow-xl">
+            <h3 class="font-bold text-lg text-slate-800">Registrar Abono</h3>
+            <p id="abono-client-name" class="text-sm font-semibold text-slate-600"></p>
+            <input type="number" id="abono-amount" step="0.01" placeholder="Monto abonado ($ USD)" class="w-full p-2 border rounded">
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeAbonoModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
+                <button onclick="confirmAbono()" class="px-4 py-2 bg-emerald-600 text-white rounded">Procesar</button>
+            </div>
+        </div>
+    </div>
 
-    function addToCart(id) {
-      const product = state.products.find(p => p.id === id);
-      if (!product || product.stock <= 0) return alert('Sin stock disponible');
-      const itemInCart = state.cart.find(i => i.id === id);
-      if (itemInCart) {
-        if (itemInCart.qty < product.stock) itemInCart.qty++;
-      } else {
-        state.cart.push({ ...product, qty: 1 });
-      }
-      renderPOS();
-    }
+    <!-- Ticket Imprimible -->
+    <div id="ticket-printable" class="hidden p-4 bg-white font-mono text-xs w-64 text-slate-900 border border-slate-300">
+        <div class="text-center font-bold mb-1 border-b pb-1 text-sm">EL MANANTIAL C.A.</div>
+        <div class="text-[10px] text-center mb-2" id="ticket-date"></div>
+        <div id="ticket-items" class="space-y-1 mb-2 border-b pb-2"></div>
+        <div class="font-bold flex justify-between"><span>TOTAL USD:</span><span id="ticket-total"></span></div>
+        <div class="font-bold flex justify-between text-[11px]"><span>TOTAL BS:</span><span id="ticket-total-bs"></span></div>
+        <div class="text-center text-[10px] mt-4 border-t pt-2">¡Gracias por su compra!</div>
+    </div>
 
-    function removeFromCart(index) {
-      state.cart.splice(index, 1);
-      renderPOS();
-    }
+    <script>
+        // CONFIGURACIÓN DE SUPABASE (Conectado a tu base de datos)
+        const SUPABASE_URL = 'https://tuhostsupabase.supabase.co'; // Reemplaza con tu URL real si difiere
+        const SUPABASE_KEY = 'tu-anon-key-real'; // Reemplaza con tu Key pública real
+        let supabaseClient = null;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (e) {
+            console.warn("Supabase no inicializado correctamente, usando modo local.");
+        }
 
-    function clearCart() {
-      state.cart = [];
-      renderPOS();
-    }
+        let state = {
+            rate: 36.50,
+            activeTab: 'pos',
+            totalSalesUsd: 0,
+            products: [
+                { id: 1, name: 'Harina P.A.N.', sku: 'ALM-001', cat: 'Víveres', unit: 'Unid', stock: 120, cost: 1.00, price: 1.40 },
+                { id: 2, name: 'Cebolla', sku: 'HOR-001', cat: 'Frutas y Hortalizas', unit: 'Kg', stock: 50.0, cost: 0.80, price: 1.50 },
+                { id: 3, name: 'Tomate Perita', sku: 'HOR-002', cat: 'Frutas y Hortalizas', unit: 'Kg', stock: 40.0, cost: 0.90, price: 1.80 },
+                { id: 4, name: 'Queso Duro', sku: 'CHA-001', cat: 'Charcutería', unit: 'Kg', stock: 20.0, cost: 4.00, price: 6.00 }
+            ],
+            cart: [],
+            customers: [
+                { id: 1, name: 'María Villalba', debt: 3208.73, limit: 5000 },
+                { id: 2, name: 'Luis Colmenares', debt: 2566.99, limit: 3000 }
+            ],
+            selectedCustomerForAbono: null,
+            activeProductForMovement: null
+        };
 
-    function openProductModal() {
-      document.getElementById('prod-id').value = '';
-      document.getElementById('prod-name').value = '';
-      document.getElementById('prod-sku').value = '';
-      document.getElementById('prod-category').value = '';
-      document.getElementById('prod-stock').value = '';
-      document.getElementById('prod-cost').value = '';
-      document.getElementById('prod-price').value = '';
-      document.getElementById('product-modal').classList.remove('hidden');
-    }
+        async function initApp() {
+            await fetchProductsFromSupabase();
+            render();
+        }
 
-    function closeProductModal() {
-      document.getElementById('product-modal').classList.add('hidden');
-    }
+        async function fetchProductsFromSupabase() {
+            if (!supabaseClient) return;
+            const { data, error } = await supabaseClient.from('productos').select('*');
+            if (!error && data && data.length > 0) {
+                state.products = data;
+            }
+        }
 
-    async function saveProduct() {
-      const newProd = {
-        name: document.getElementById('prod-name').value,
-        sku: document.getElementById('prod-sku').value,
-        category: document.getElementById('prod-category').value,
-        stock: parseInt(document.getElementById('prod-stock').value) || 0,
-        cost: parseFloat(document.getElementById('prod-cost').value) || 0,
-        price: parseFloat(document.getElementById('prod-price').value) || 0
-      };
-
-      const { data, error } = await supabaseClient.from('productos').insert([newProd]).select();
-      if (error) {
-        alert('Error al guardar en Supabase: ' + error.message);
-      } else {
-        closeProductModal();
-        await fetchProducts();
-      }
-    }
-
-    async function deleteProduct(id) {
-      const { error } = await supabaseClient.from('productos').delete().eq('id', id);
-      if (error) {
-        alert('Error al eliminar: ' + error.message);
-      } else {
-        await fetchProducts();
-      }
-    }
-
-    async function checkout() {
-      if (state.cart.length === 0) return alert('El carrito está vacío');
-      alert('Venta procesada con éxito.');
-      state.cart = [];
-      renderPOS();
-    }
-
-    function filterProducts() {
-      renderPOS();
-    }
-
-    initApp();
-  </script>
-</body>
-</html>
-
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            const titles = { pos: 'Punto de Venta', inventory: 'Inventario de Productos', credits: 'Control de Fiados y Créditos', finance: 'Contabilidad y Margen de Ganancia' };
+            document.getElementById('page-title').innerText = titles[tabId];
+            
+            document.querySelectorAll('aside nav button').forEach(b => {
+                b.classList.remove('bg-brand-blue');
+                b.classList.add('hover:bg-slate-800');
+            });
+            const activ
