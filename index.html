@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema El Manantial</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
@@ -31,19 +30,54 @@
             #ticket-printable { position: absolute; left: 0; top: 0; width: 100%; }
         }
     </style>
+
+    <!-- Integración con Firebase Firestore -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { 
+        getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot 
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      // Coloca aquí tus credenciales del proyecto de Firebase
+      const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        authDomain: "TU_PROYECTO.firebaseapp.com",
+        projectId: "TU_PROYECTO_ID",
+        storageBucket: "TU_PROYECTO.appspot.com",
+        messagingSenderId: "TU_SENDER_ID",
+        appId: "TU_APP_ID"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // Sincronización en tiempo real de productos desde la nube
+      onSnapshot(collection(db, "products"), (snapshot) => {
+        state.products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        render();
+      });
+
+      // Exportar referencias globales para que las utilice el script principal
+      window.db = db;
+      window.fbAddDoc = addDoc;
+      window.fbUpdateDoc = updateDoc;
+      window.fbDeleteDoc = deleteDoc;
+      window.fbCollection = collection;
+      window.fbDoc = doc;
+    </script>
 </head>
 <body class="text-slate-800">
     <div id="app" class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-64 bg-brand-navy text-white flex flex-col hidden md:flex">
+        <aside class="w-64 bg-brand-navy text-white flex flex-col">
             <div class="p-5 text-xl font-bold border-b border-slate-700 flex items-center gap-2">
                 <i class="fa-solid fa-water text-brand-blue"></i> El Manantial
             </div>
             <nav class="flex-1 p-4 space-y-2">
-                <button onclick="switchTab('pos')" id="btn-pos" class="w-full text-left p-3 rounded bg-brand-blue flex items-center gap-3"><i class="fa-solid fa-cart-shopping"></i> Punto de Venta</button>
-                <button onclick="switchTab('inventory')" id="btn-inventory" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-box"></i> Inventario</button>
-                <button onclick="switchTab('credits')" id="btn-credits" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-handshake-angle"></i> Fiados y Créditos</button>
-                <button onclick="switchTab('finance')" id="btn-finance" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-chart-line"></i> Contabilidad y Margen</button>
+                <button onclick="switchTab('pos')" class="w-full text-left p-3 rounded bg-brand-blue flex items-center gap-3"><i class="fa-solid fa-cart-shopping"></i> Punto de Venta</button>
+                <button onclick="switchTab('inventory')" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-box"></i> Inventario</button>
+                <button onclick="switchTab('credits')" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-handshake-angle"></i> Fiados y Créditos</button>
+                <button onclick="switchTab('finance')" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center gap-3"><i class="fa-solid fa-chart-line"></i> Contabilidad y Margen</button>
             </nav>
             <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
                 Tasa del Día: <span id="bcv-display" class="font-bold text-white">36.50</span> Bs/$
@@ -62,10 +96,10 @@
 
             <div class="flex-1 overflow-y-auto p-6">
                 <!-- POS Tab -->
-                <section id="tab-pos" class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                <section id="tab-pos" class="grid grid-cols-3 gap-6 h-full">
                     <div class="col-span-2 flex flex-col gap-4">
                         <input type="text" placeholder="Buscar producto por nombre, SKU o categoría..." oninput="filterProducts(this.value)" class="p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue bg-white">
-                        <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1 content-start overflow-y-auto"></div>
+                        <div id="products-grid" class="grid grid-cols-3 gap-4 flex-1 content-start overflow-y-auto"></div>
                     </div>
                     <div class="bg-white p-4 rounded-lg border border-slate-200 flex flex-col justify-between shadow-sm">
                         <div>
@@ -90,9 +124,9 @@
                         <h3 class="font-bold text-slate-700">Gestión de Productos e Inventario</h3>
                         <button onclick="openProductModal()" class="bg-brand-blue text-white px-4 py-2 rounded text-sm hover:bg-sky-600">+ Nuevo Producto</button>
                     </div>
-                    <div class="bg-white rounded border overflow-hidden flex-1 overflow-y-auto">
+                    <div class="bg-white rounded border overflow-hidden flex-1">
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase sticky top-0">
+                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase">
                                 <tr>
                                     <th class="p-3">Nombre</th>
                                     <th class="p-3">SKU</th>
@@ -100,7 +134,7 @@
                                     <th class="p-3">Stock / Peso Actual</th>
                                     <th class="p-3">Costo ($)</th>
                                     <th class="p-3">Precio ($)</th>
-                                    <th class="p-3 text-center">Movimientos</th>
+                                    <th class="p-3 text-center">Movimientos (Entrada/Salida)</th>
                                     <th class="p-3 text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -119,14 +153,15 @@
                         </div>
                         <button onclick="openCustomerModal()" class="bg-brand-blue text-white px-4 py-2 rounded text-sm hover:bg-sky-600">+ Agregar Cliente</button>
                     </div>
-                    <div class="bg-white rounded border overflow-hidden flex-1 overflow-y-auto">
+                    <div class="bg-white rounded border overflow-hidden flex-1">
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase sticky top-0">
+                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase">
                                 <tr>
                                     <th class="p-3">Cliente</th>
                                     <th class="p-3">Deuda ($)</th>
                                     <th class="p-3">Deuda (Bs)</th>
                                     <th class="p-3">Límite ($)</th>
+                                    <th class="p-3">Estado</th>
                                     <th class="p-3 text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -137,7 +172,7 @@
 
                 <!-- Finance Tab -->
                 <section id="tab-finance" class="hidden h-full flex flex-col gap-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div class="bg-white p-4 rounded border shadow-sm">
                             <span class="text-xs text-slate-400 uppercase font-semibold">Ventas Totales Registradas</span>
                             <div id="finance-sales-usd" class="text-2xl font-bold text-slate-800">$0.00</div>
@@ -154,15 +189,16 @@
                             <div id="finance-profit-bs" class="text-xs text-emerald-800">0.00 Bs</div>
                         </div>
                     </div>
-                    <div class="bg-white rounded border overflow-hidden flex-1 p-4 overflow-y-auto">
+                    <div class="bg-white rounded border overflow-hidden flex-1 p-4">
                         <h4 class="font-bold text-slate-700 mb-3">Análisis de Margen de Ganancia por Producto / Kg</h4>
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase sticky top-0">
+                            <thead class="bg-slate-50 border-b text-xs text-slate-500 uppercase">
                                 <tr>
                                     <th class="p-3">Producto</th>
                                     <th class="p-3">Unidad</th>
                                     <th class="p-3">Costo ($)</th>
                                     <th class="p-3">Venta ($)</th>
+                                    <th class="p-3">Venta (Bs)</th>
                                     <th class="p-3">Ganancia ($)</th>
                                     <th class="p-3">Margen %</th>
                                 </tr>
@@ -176,8 +212,8 @@
     </div>
 
     <!-- Modals -->
-    <div id="modal-product" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg w-96 space-y-4 shadow-xl">
+    <div id="modal-product" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-96 space-y-4">
             <h3 class="font-bold text-lg text-slate-800">Registrar Nuevo Producto</h3>
             <input type="text" id="p-name" placeholder="Nombre del producto" class="w-full p-2 border rounded">
             <input type="text" id="p-sku" placeholder="SKU / Código" class="w-full p-2 border rounded">
@@ -196,9 +232,9 @@
                     <option value="Kg">Kilogramos (Kg)</option>
                 </select>
             </div>
-            <input type="number" id="p-stock" step="0.01" placeholder="Stock Inicial" class="w-full p-2 border rounded">
-            <input type="number" id="p-cost" step="0.01" placeholder="Precio Costo ($)" class="w-full p-2 border rounded">
-            <input type="number" id="p-price" step="0.01" placeholder="Precio Venta ($)" class="w-full p-2 border rounded">
+            <input type="number" id="p-stock" step="0.01" placeholder="Stock Inicial (Cantidad o Kg)" class="w-full p-2 border rounded">
+            <input type="number" id="p-cost" step="0.01" placeholder="Precio Costo ($ por Unid o Kg)" class="w-full p-2 border rounded">
+            <input type="number" id="p-price" step="0.01" placeholder="Precio Venta ($ por Unid o Kg)" class="w-full p-2 border rounded">
             <div class="flex justify-end gap-2 mt-4">
                 <button onclick="closeProductModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
                 <button onclick="saveProduct()" class="px-4 py-2 bg-brand-blue text-white rounded">Guardar</button>
@@ -206,42 +242,43 @@
         </div>
     </div>
 
-    <div id="modal-movement" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg w-96 space-y-4 shadow-xl">
+    <!-- Modal Movimiento Inventario -->
+    <div id="modal-movement" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-96 space-y-4">
             <h3 class="font-bold text-lg text-slate-800" id="mov-title">Registrar Movimiento</h3>
             <p id="mov-prod-info" class="text-xs text-slate-500"></p>
             <select id="mov-type" class="w-full p-2 border rounded bg-white font-semibold">
                 <option value="in">➕ Registrar Entrada (Nuevo ingreso)</option>
-                <option value="out">➖ Registrar Salida (Merma / Ajuste)</option>
+                <option value="out">➖ Registrar Salida (Merma / Ajuste / Venta manual)</option>
             </select>
-            <input type="number" id="mov-amount" step="0.01" placeholder="Cantidad o Kilogramos" class="w-full p-2 border rounded">
+            <input type="number" id="mov-amount" step="0.01" placeholder="Cantidad o Kilogramos a mover" class="w-full p-2 border rounded">
             <div class="flex justify-end gap-2 mt-4">
                 <button onclick="closeMovementModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
-                <button onclick="confirmMovement()" class="px-4 py-2 bg-brand-blue text-white rounded">Aplicar</button>
+                <button onclick="confirmMovement()" class="px-4 py-2 bg-brand-blue text-white rounded">Aplicar Movimiento</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-customer" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg w-96 space-y-4 shadow-xl">
+    <div id="modal-customer" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-96 space-y-4">
             <h3 class="font-bold text-lg text-slate-800">Agregar Nuevo Cliente</h3>
             <input type="text" id="c-name" placeholder="Nombre completo" class="w-full p-2 border rounded">
             <input type="number" id="c-limit" step="0.01" placeholder="Límite de crédito ($ USD)" class="w-full p-2 border rounded">
             <div class="flex justify-end gap-2 mt-4">
                 <button onclick="closeCustomerModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
-                <button onclick="saveCustomer()" class="px-4 py-2 bg-brand-blue text-white rounded">Guardar</button>
+                <button onclick="saveCustomer()" class="px-4 py-2 bg-brand-blue text-white rounded">Guardar Cliente</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-abono" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg w-80 space-y-4 shadow-xl">
+    <div id="modal-abono" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-80 space-y-4">
             <h3 class="font-bold text-lg text-slate-800">Registrar Abono</h3>
             <p id="abono-client-name" class="text-sm font-semibold text-slate-600"></p>
             <input type="number" id="abono-amount" step="0.01" placeholder="Monto abonado ($ USD)" class="w-full p-2 border rounded">
             <div class="flex justify-end gap-2 mt-4">
                 <button onclick="closeAbonoModal()" class="px-4 py-2 border rounded text-slate-600">Cancelar</button>
-                <button onclick="confirmAbono()" class="px-4 py-2 bg-emerald-600 text-white rounded">Procesar</button>
+                <button onclick="confirmAbono()" class="px-4 py-2 bg-emerald-600 text-white rounded">Procesar Abono</button>
             </div>
         </div>
     </div>
@@ -257,26 +294,11 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN DE SUPABASE (Conectado a tu base de datos)
-        const SUPABASE_URL = 'https://tuhostsupabase.supabase.co'; // Reemplaza con tu URL real si difiere
-        const SUPABASE_KEY = 'tu-anon-key-real'; // Reemplaza con tu Key pública real
-        let supabaseClient = null;
-        try {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        } catch (e) {
-            console.warn("Supabase no inicializado correctamente, usando modo local.");
-        }
-
         let state = {
             rate: 36.50,
             activeTab: 'pos',
             totalSalesUsd: 0,
-            products: [
-                { id: 1, name: 'Harina P.A.N.', sku: 'ALM-001', cat: 'Víveres', unit: 'Unid', stock: 120, cost: 1.00, price: 1.40 },
-                { id: 2, name: 'Cebolla', sku: 'HOR-001', cat: 'Frutas y Hortalizas', unit: 'Kg', stock: 50.0, cost: 0.80, price: 1.50 },
-                { id: 3, name: 'Tomate Perita', sku: 'HOR-002', cat: 'Frutas y Hortalizas', unit: 'Kg', stock: 40.0, cost: 0.90, price: 1.80 },
-                { id: 4, name: 'Queso Duro', sku: 'CHA-001', cat: 'Charcutería', unit: 'Kg', stock: 20.0, cost: 4.00, price: 6.00 }
-            ],
+            products: [],
             cart: [],
             customers: [
                 { id: 1, name: 'María Villalba', debt: 3208.73, limit: 5000 },
@@ -286,19 +308,6 @@
             activeProductForMovement: null
         };
 
-        async function initApp() {
-            await fetchProductsFromSupabase();
-            render();
-        }
-
-        async function fetchProductsFromSupabase() {
-            if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('productos').select('*');
-            if (!error && data && data.length > 0) {
-                state.products = data;
-            }
-        }
-
         function switchTab(tabId) {
             state.activeTab = tabId;
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
@@ -307,354 +316,16 @@
             const titles = { pos: 'Punto de Venta', inventory: 'Inventario de Productos', credits: 'Control de Fiados y Créditos', finance: 'Contabilidad y Margen de Ganancia' };
             document.getElementById('page-title').innerText = titles[tabId];
             
-            document.querySelectorAll('aside nav button').forEach(b => {
-                b.classList.remove('bg-brand-blue');
-                b.classList.add('hover:bg-slate-800');
-            });
-            const activeBtn = document.getElementById(`btn-${tabId}`);
-            if(activeBtn) {
-                activeBtn.classList.remove('hover:bg-slate-800');
-                activeBtn.classList.add('bg-brand-blue');
-            }
+            document.querySelectorAll('aside nav button').forEach(b => b.classList.remove('bg-brand-blue'));
+            event.currentTarget.classList.add('bg-brand-blue');
             render();
         }
 
         function updateRate(val) {
             state.rate = parseFloat(val) || 1;
             document.getElementById('bcv-display').innerText = state.rate.toFixed(2);
-            document.getElementById('bcv-input').value = state.rate.toFixed(2);
             render();
         }
 
         function filterProducts(query) {
-            renderProducts(query);
-        }
-
-        function render() {
-            renderProducts('');
-            renderCart();
-            renderInventory();
-            renderCredits();
-            renderFinance();
-        }
-
-        function renderProducts(filter = '') {
-            const grid = document.getElementById('products-grid');
-            if(!grid) return;
-            grid.innerHTML = '';
-            
-            const filtered = state.products.filter(p => 
-                p.name.toLowerCase().includes(filter.toLowerCase()) || 
-                p.sku.toLowerCase().includes(filter.toLowerCase()) ||
-                p.cat.toLowerCase().includes(filter.toLowerCase())
-            );
-
-            filtered.forEach(p => {
-                const priceBs = (p.price * state.rate).toFixed(2);
-                let actionHtml = '';
-                if(p.unit === 'Kg') {
-                    actionHtml = `
-                        <div class="flex items-center gap-1 mt-2">
-                            <input type="number" id="qty-${p.id}" value="1.00" step="0.1" class="w-16 p-1 border rounded text-xs text-center font-bold">
-                            <button onclick="addKgToCart(${p.id})" class="flex-1 bg-brand-blue text-white text-xs py-1.5 rounded hover:bg-sky-600 font-semibold">Agregar Kg</button>
-                        </div>`;
-                } else {
-                    actionHtml = `
-                        <button onclick="addUnitToCart(${p.id})" class="w-full mt-2 bg-brand-blue text-white text-xs py-1.5 rounded hover:bg-sky-600 font-semibold">+ Añadir</button>`;
-                }
-
-                grid.innerHTML += `
-                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <span class="text-[10px] uppercase font-bold text-slate-400">${p.cat}</span>
-                            <h4 class="font-bold text-sm text-slate-800">${p.name}</h4>
-                            <div class="text-xs text-slate-500 mt-1">Stock: <b>${p.stock}</b> ${p.unit}</div>
-                        </div>
-                        <div class="mt-2 pt-2 border-t border-slate-100">
-                            <div class="flex justify-between items-center text-sm font-bold text-brand-navy">
-                                <span>$${p.price.toFixed(2)}</span>
-                                <span class="text-xs text-slate-500 font-normal">${priceBs} Bs</span>
-                            </div>
-                            ${actionHtml}
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function addUnitToCart(id) {
-            const prod = state.products.find(p => p.id === id);
-            if(!prod || prod.stock <= 0) return alert('Producto sin stock disponible.');
-            
-            let item = state.cart.find(i => i.id === id);
-            if(item) {
-                if(item.qty + 1 > prod.stock) return alert('No hay suficiente stock.');
-                item.qty += 1;
-            } else {
-                state.cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1, unit: prod.unit });
-            }
-            renderCart();
-        }
-
-        function addKgToCart(id) {
-            const prod = state.products.find(p => p.id === id);
-            const inputVal = parseFloat(document.getElementById(`qty-${id}`).value) || 0;
-            if(inputVal <= 0) return alert('Ingrese un peso válido.');
-            if(inputVal > prod.stock) return alert('El peso supera el stock disponible.');
-
-            let item = state.cart.find(i => i.id === id);
-            if(item) {
-                if(item.qty + inputVal > prod.stock) return alert('Stock insuficiente.');
-                item.qty += inputVal;
-            } else {
-                state.cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: inputVal, unit: prod.unit });
-            }
-            renderCart();
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cart-items');
-            if(!container) return;
-            container.innerHTML = '';
-            let subtotal = 0;
-
-            state.cart.forEach((item, index) => {
-                const totalItem = item.price * item.qty;
-                subtotal += totalItem;
-                container.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded text-sm">
-                        <div>
-                            <div class="font-semibold">${item.name}</div>
-                            <div class="text-xs text-slate-500">${item.qty} ${item.unit} x $${item.price.toFixed(2)}</div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold">$${totalItem.toFixed(2)}</span>
-                            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>`;
-            });
-
-            const totalBs = subtotal * state.rate;
-            document.getElementById('cart-subtotal').innerText = `$${subtotal.toFixed(2)}`;
-            document.getElementById('cart-total').innerText = `$${subtotal.toFixed(2)}`;
-            document.getElementById('cart-total-bs').innerText = `${totalBs.toFixed(2)} Bs`;
-        }
-
-        function removeFromCart(index) {
-            state.cart.splice(index, 1);
-            renderCart();
-        }
-
-        function clearCart() {
-            state.cart = [];
-            renderCart();
-        }
-
-        async function checkout(type) {
-            if(state.cart.length === 0) return alert('El carrito está vacío.');
-            let total = state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-
-            // Descontar inventario localmente y en Supabase
-            for(let item of state.cart) {
-                let prod = state.products.find(p => p.id === item.id);
-                if(prod) {
-                    prod.stock = Math.max(0, prod.stock - item.qty);
-                    if(supabaseClient) {
-                        await supabaseClient.from('productos').update({ stock: prod.stock }).eq('id', prod.id);
-                    }
-                }
-            }
-
-            state.totalSalesUsd += total;
-            prepareTicket(type, total);
-            window.print();
-            state.cart = [];
-            render();
-        }
-
-        function prepareTicket(type, total) {
-            document.getElementById('ticket-date').innerText = new Date().toLocaleString();
-            let itemsHtml = '';
-            state.cart.forEach(i => {
-                itemsHtml += `<div class="flex justify-between"><span>${i.qty}x ${i.name}</span><span>$${(i.price*i.qty).toFixed(2)}</span></div>`;
-            });
-            document.getElementById('ticket-items').innerHTML = itemsHtml;
-            document.getElementById('ticket-total').innerText = `$${total.toFixed(2)}`;
-            document.getElementById('ticket-total-bs').innerText = `${(total * state.rate).toFixed(2)} Bs`;
-        }
-
-        function renderInventory() {
-            const tbody = document.getElementById('inventory-table-body');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            state.products.forEach(p => {
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50 text-sm">
-                        <td class="p-3 font-semibold">${p.name}</td>
-                        <td class="p-3 text-slate-500">${p.sku}</td>
-                        <td class="p-3">${p.cat}</td>
-                        <td class="p-3 font-bold">${p.stock} ${p.unit}</td>
-                        <td class="p-3">$${p.cost.toFixed(2)}</td>
-                        <td class="p-3 text-brand-blue font-bold">$${p.price.toFixed(2)}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="openMovementModal(${p.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs font-semibold"><i class="fa-solid fa-arrows-rotate"></i> Ajustar Stock</button>
-                        </td>
-                        <td class="p-3 text-center">
-                            <button onclick="deleteProduct(${p.id})" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
-                        </td>
-                    </tr>`;
-            });
-        }
-
-        function openProductModal() { document.getElementById('modal-product').classList.remove('hidden'); }
-        function closeProductModal() { document.getElementById('modal-product').classList.add('hidden'); }
-
-        async function saveProduct() {
-            const name = document.getElementById('p-name').value;
-            const sku = document.getElementById('p-sku').value;
-            const cat = document.getElementById('p-cat').value;
-            const unit = document.getElementById('p-unit').value;
-            const stock = parseFloat(document.getElementById('p-stock').value) || 0;
-            const cost = parseFloat(document.getElementById('p-cost').value) || 0;
-            const price = parseFloat(document.getElementById('p-price').value) || 0;
-
-            if(!name) return alert('Ingrese el nombre del producto.');
-
-            const newProd = { name, sku, cat, unit, stock, cost, price };
-
-            if(supabaseClient) {
-                const { data, error } = await supabaseClient.from('productos').insert([newProd]).select();
-                if(!error && data) {
-                    newProd.id = data[0].id;
-                } else {
-                    newProd.id = Date.now();
-                }
-            } else {
-                newProd.id = Date.now();
-            }
-
-            state.products.push(newProd);
-            closeProductModal();
-            render();
-        }
-
-        async function deleteProduct(id) {
-            if(!confirm('¿Seguro que deseas eliminar este producto?')) return;
-            state.products = state.products.filter(p => p.id !== id);
-            if(supabaseClient) {
-                await supabaseClient.from('productos').delete().eq('id', id);
-            }
-            render();
-        }
-
-        function openMovementModal(id) {
-            state.activeProductForMovement = state.products.find(p => p.id === id);
-            document.getElementById('mov-prod-info').innerText = `Producto: ${state.activeProductForMovement.name} (Stock actual: ${state.activeProductForMovement.stock} ${state.activeProductForMovement.unit})`;
-            document.getElementById('modal-movement').classList.remove('hidden');
-        }
-        function closeMovementModal() { document.getElementById('modal-movement').classList.add('hidden'); }
-
-        async function confirmMovement() {
-            const type = document.getElementById('mov-type').value;
-            const amount = parseFloat(document.getElementById('mov-amount').value) || 0;
-            if(amount <= 0) return alert('Ingrese una cantidad válida.');
-
-            if(type === 'in') {
-                state.activeProductForMovement.stock += amount;
-            } else {
-                state.activeProductForMovement.stock = Math.max(0, state.activeProductForMovement.stock - amount);
-            }
-
-            if(supabaseClient) {
-                await supabaseClient.from('productos').update({ stock: state.activeProductForMovement.stock }).eq('id', state.activeProductForMovement.id);
-            }
-
-            closeMovementModal();
-            render();
-        }
-
-        function renderCredits() {
-            const tbody = document.getElementById('credits-table-body');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            let totalDebtUsd = 0;
-
-            state.customers.forEach(c => {
-                totalDebtUsd += c.debt;
-                const debtBs = c.debt * state.rate;
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50 text-sm">
-                        <td class="p-3 font-semibold">${c.name}</td>
-                        <td class="p-3 font-bold text-red-600">$${c.debt.toFixed(2)}</td>
-                        <td class="p-3 text-slate-500">${debtBs.toFixed(2)} Bs</td>
-                        <td class="p-3">$${c.limit.toFixed(2)}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="openAbonoModal(${c.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-semibold">Registrar Abono</button>
-                        </td>
-                    </tr>`;
-            });
-
-            document.getElementById('total-debt').innerText = `$${totalDebtUsd.toFixed(2)}`;
-            document.getElementById('total-debt-bs').innerText = `${(totalDebtUsd * state.rate).toFixed(2)} Bs`;
-        }
-
-        function openCustomerModal() { document.getElementById('modal-customer').classList.remove('hidden'); }
-        function closeCustomerModal() { document.getElementById('modal-customer').classList.add('hidden'); }
-        function saveCustomer() {
-            const name = document.getElementById('c-name').value;
-            const limit = parseFloat(document.getElementById('c-limit').value) || 0;
-            if(!name) return alert('Ingrese el nombre del cliente.');
-            state.customers.push({ id: Date.now(), name, debt: 0, limit });
-            closeCustomerModal();
-            render();
-        }
-
-        function openAbonoModal(id) {
-            state.selectedCustomerForAbono = state.customers.find(c => c.id === id);
-            document.getElementById('abono-client-name').innerText = `Cliente: ${state.selectedCustomerForAbono.name} (Deuda actual: $${state.selectedCustomerForAbono.debt.toFixed(2)})`;
-            document.getElementById('modal-abono').classList.remove('hidden');
-        }
-        function closeAbonoModal() { document.getElementById('modal-abono').classList.add('hidden'); }
-        function confirmAbono() {
-            const amount = parseFloat(document.getElementById('abono-amount').value) || 0;
-            if(amount <= 0) return alert('Ingrese un monto válido.');
-            state.selectedCustomerForAbono.debt = Math.max(0, state.selectedCustomerForAbono.debt - amount);
-            closeAbonoModal();
-            render();
-        }
-
-        function renderFinance() {
-            let totalCost = 0;
-            state.products.forEach(p => {
-                totalCost += (p.cost * p.stock);
-            });
-            let profit = state.totalSalesUsd - totalCost;
-
-            document.getElementById('finance-sales-usd').innerText = `$${state.totalSalesUsd.toFixed(2)}`;
-            document.getElementById('finance-sales-bs').innerText = `${(state.totalSalesUsd * state.rate).toFixed(2)} Bs`;
-            document.getElementById('finance-cost-usd').innerText = `$${totalCost.toFixed(2)}`;
-            document.getElementById('finance-cost-bs').innerText = `${(totalCost * state.rate).toFixed(2)} Bs`;
-            document.getElementById('finance-profit-usd').innerText = `$${profit.toFixed(2)}`;
-            document.getElementById('finance-profit-bs').innerText = `${(profit * state.rate).toFixed(2)} Bs`;
-
-            const tbody = document.getElementById('finance-table-body');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            state.products.forEach(p => {
-                const gananciaUnit = p.price - p.cost;
-                const margen = p.cost > 0 ? ((gananciaUnit / p.cost) * 100).toFixed(1) : 0;
-                tbody.innerHTML += `
-                    <tr class="border-b text-sm">
-                        <td class="p-3 font-semibold">${p.name}</td>
-                        <td class="p-3">${p.unit}</td>
-                        <td class="p-3">$${p.cost.toFixed(2)}</td>
-                        <td class="p-3 font-bold text-brand-blue">$${p.price.toFixed(2)}</td>
-                        <td class="p-3 font-bold text-emerald-600">+$${gananciaUnit.toFixed(2)}</td>
-                        <td class="p-3"><span class="bg-sky-100 text-brand-blue px-2 py-0.5 rounded text-xs font-bold">${margen}%</span></td>
-                    </tr>`;
-            });
-        }
-
-        initApp();
-    </script>
-</body>
-</html>
+            const fi
