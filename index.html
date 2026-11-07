@@ -112,15 +112,13 @@
         </div>
     </header>
 
-    <!-- CONTENEDOR PRINCIPAL -->
+    <!-- CONTENEDOR PRINCIPAL DE VISTAS -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
 
         <!-- VISTA 1: PUNTO DE VENTA (POS) -->
         <section id="sec-pos" class="tab-content grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
             <!-- Panel Izquierdo: Categorías y Productos -->
             <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
-                
                 <!-- Buscador de productos -->
                 <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200">
                     <div class="relative">
@@ -133,7 +131,7 @@
                 <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
                     <h2 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">Categorías de Productos</h2>
                     <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2" id="pos-categories-container">
-                        <!-- Categorías inyectadas dinámicamente -->
+                        <!-- Inyectado por JS -->
                     </div>
                 </div>
 
@@ -145,18 +143,15 @@
                             <span id="pos-product-count" class="text-xs bg-slate-100 text-slate-600 font-extrabold px-2 py-0.5 rounded-full">0</span>
                         </h2>
                     </div>
-
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto max-h-[520px] p-1" id="pos-products-grid">
-                        <!-- Productos inyectados dinámicamente -->
+                        <!-- Inyectado por JS -->
                     </div>
                 </div>
             </div>
 
-            <!-- Panel Derecho: Orden Actual (Carrito) -->
+            <!-- Panel Derecho: Carrito -->
             <div class="lg:col-span-5 xl:col-span-4">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full sticky top-24 max-h-[calc(100vh-7rem)]">
-                    
-                    <!-- Encabezado Carrito -->
                     <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-t-2xl">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-cart-shopping text-blue-600"></i>
@@ -167,12 +162,10 @@
                         </button>
                     </div>
 
-                    <!-- Lista de Ítems del Carrito -->
                     <div class="flex-1 overflow-y-auto p-3 space-y-2.5" id="cart-items-container">
-                        <!-- Items inyectados aquí -->
+                        <!-- Items del Carrito -->
                     </div>
 
-                    <!-- Resumen del Carrito y Botón Cobrar -->
                     <div class="p-4 bg-slate-50 border-t border-slate-200 rounded-b-2xl space-y-3">
                         <div class="space-y-1 text-xs">
                             <div class="flex justify-between text-slate-500 font-medium">
@@ -195,7 +188,7 @@
                             </div>
                         </div>
 
-                        <button onclick="openCheckoutModal()" id="btn-procesar-pago" disabled class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-extrabold rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.99] transition flex items-center justify-center gap-2">
+                        <button onclick="openCheckoutModal()" id="btn-procesar-pago" disabled class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-extrabold rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center justify-center gap-2">
                             <i class="fa-solid fa-circle-check"></i> Procesar Pago
                         </button>
                     </div>
@@ -205,8 +198,6 @@
 
         <!-- VISTA 2: INVENTARIO -->
         <section id="sec-inventario" class="tab-content hidden space-y-5">
-            
-            <!-- Tarjetas Métricas Inventario -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
@@ -242,7 +233,6 @@
                 </div>
             </div>
 
-            <!-- Controles y Buscador del Inventario -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center">
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     <div class="relative w-full md:w-72">
@@ -253,12 +243,11 @@
                         <option value="ALL">Todas las Categorías</option>
                     </select>
                 </div>
-                <button onclick="openProductModal()" class="w-full md:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-extrabold rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition">
+                <button onclick="openProductModal()" class="w-full md:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-extrabold rounded-xl shadow-md transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus"></i> Agregar Nuevo Producto
                 </button>
             </div>
 
-            <!-- Tabla de Inventario -->
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -282,8 +271,6 @@
 
         <!-- VISTA 3: FIADOS Y CRÉDITOS -->
         <section id="sec-fiados" class="tab-content hidden space-y-6">
-            
-            <!-- Resumen Total Fiado -->
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-pink-400">Total por Cobrar en Fiados</span>
@@ -295,7 +282,6 @@
                 </button>
             </div>
 
-            <!-- Lista de Clientes en Fiado -->
             <div class="space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <h3 class="font-extrabold text-slate-800 text-lg">Clientes con Cuenta Abierta</h3>
@@ -304,755 +290,12 @@
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="fiados-customers-grid">
-                    <!-- Tarjetas de clientes inyectadas dinámicamente -->
+                    <!-- Tarjetas de clientes -->
                 </div>
             </div>
         </section>
 
-        <!-- VISTA MÓDULO NUEVO 1: PROVEEDORES Y CUENTAS POR PAGAR -->
+        <!-- VISTA 4: PROVEEDORES Y CUENTAS POR PAGAR -->
         <section id="sec-proveedores" class="tab-content hidden space-y-6">
-            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-300">Cuentas por Pagar a Proveedores</span>
-                    <h2 class="text-3xl font-black mt-1 text-white" id="prov-total-cxp-bs">Bs. 0,00</h2>
-                    <p class="text-sm font-bold text-indigo-300 mt-0.5" id="prov-total-cxp-usd">$0.00 USD Pendientes de Pago</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="openSupplierModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus"></i> Nuevo Proveedor
-                    </button>
-                    <button onclick="openSupplyPurchaseModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center gap-2">
-                        <i class="fa-solid fa-cart-flatbed"></i> Registrar Compra / Factura
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabla de Proveedores y Deudas -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                    <h3 class="font-extrabold text-slate-800 text-lg">Directorio de Proveedores</h3>
-                    <div class="relative w-full sm:w-64">
-                        <input type="text" id="prov-search" placeholder="Buscar proveedor..." oninput="renderSuppliersList()" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="suppliers-grid">
-                    <!-- Tarjetas de proveedores inyectadas dinámicamente -->
-                </div>
-            </div>
-        </section>
-
-        <!-- VISTA MÓDULO NUEVO 2: REPORTES Y EXPORTACIÓN -->
-        <section id="sec-reportes" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div>
-                    <h2 class="text-xl font-black text-slate-900">Centro de Reportes y Exportación</h2>
-                    <p class="text-xs text-slate-500 font-medium">Genere reportes listos para enviar por WhatsApp o exporte a CSV / Excel</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="exportToCSV()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-2">
-                        <i class="fa-solid fa-file-excel"></i> Exportar Inventario CSV
-                    </button>
-                    <button onclick="window.print()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-2">
-                        <i class="fa-solid fa-print"></i> Imprimir Reporte
-                    </button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Reporte para WhatsApp (Ventas del Día) -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b pb-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-brands fa-whatsapp text-emerald-500 text-2xl"></i>
-                            <h3 class="font-extrabold text-slate-800">Reporte Diario de Ventas (WhatsApp)</h3>
-                        </div>
-                        <button onclick="copyWhatsAppReport()" class="px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-black rounded-lg transition flex items-center gap-1">
-                            <i class="fa-solid fa-copy"></i> Copiar Texto
-                        </button>
-                    </div>
-                    <textarea id="whatsapp-report-text" readonly class="w-full h-64 p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none resize-none"></textarea>
-                    <div class="flex justify-between items-center text-xs text-slate-500">
-                        <span>Formato estructurado con totales y tasa BCV</span>
-                        <button onclick="sendToWhatsAppDirect()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow flex items-center gap-2">
-                            <i class="fa-brands fa-whatsapp"></i> Abrir WhatsApp
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Reporte de Inventario Crítico -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b pb-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xl"></i>
-                            <h3 class="font-extrabold text-slate-800">Reporte de Faltantes / Reposición</h3>
-                        </div>
-                        <button onclick="copyLowStockReport()" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-black rounded-lg transition flex items-center gap-1">
-                            <i class="fa-solid fa-copy"></i> Copiar Lista
-                        </button>
-                    </div>
-                    <textarea id="whatsapp-lowstock-text" readonly class="w-full h-64 p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none resize-none"></textarea>
-                    <div class="flex justify-between items-center text-xs text-slate-500">
-                        <span>Genera la lista de productos con stock <= 5</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VISTA 4: ANÁLISIS FINANCIERO -->
-        <section id="sec-analisis" class="tab-content hidden space-y-6">
-            
-            <!-- Filtros de Tiempo -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
-                    <h2 class="text-lg font-extrabold text-slate-800">Resumen Financiero</h2>
-                    <p class="text-xs text-slate-500 font-medium">Ganancia real basada en ventas, costos y abonos</p>
-                </div>
-                <div class="flex bg-slate-100 p-1 rounded-xl gap-1 border border-slate-200">
-                    <button onclick="setFinancialTimeframe('today')" id="timeframe-today" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition bg-white text-blue-700 shadow-sm">Hoy</button>
-                    <button onclick="setFinancialTimeframe('7days')" id="timeframe-7days" class="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition">7 días</button>
-                    <button onclick="setFinancialTimeframe('30days')" id="timeframe-30days" class="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition">30 días</button>
-                </div>
-            </div>
-
-            <!-- Métricas Financieras Principales -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Lo que Vendió -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div class="w-1.5 h-full bg-blue-600 absolute left-0 top-0"></div>
-                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Lo que vendió</span>
-                    <h3 class="text-2xl font-black text-slate-900 mt-2" id="fin-lo-que-vendio-bs">Bs. 0,00</h3>
-                    <p class="text-xs font-bold text-blue-600" id="fin-lo-que-vendio-usd">$0.00 USD</p>
-                    <p class="text-[11px] text-slate-400 font-semibold mt-2 border-t pt-2" id="fin-tickets-count">0 ventas</p>
-                </div>
-
-                <!-- Lo que Costó -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div class="w-1.5 h-full bg-indigo-500 absolute left-0 top-0"></div>
-                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Lo que le costó</span>
-                    <h3 class="text-2xl font-black text-slate-900 mt-2" id="fin-costo-ventas-bs">Bs. 0,00</h3>
-                    <p class="text-xs font-bold text-indigo-600" id="fin-costo-ventas-usd">$0.00 USD</p>
-                    <p class="text-[11px] text-slate-400 font-semibold mt-2 border-t pt-2">Costo pagado a proveedor</p>
-                </div>
-
-                <!-- Cobros de Fiado -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div class="w-1.5 h-full bg-pink-500 absolute left-0 top-0"></div>
-                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Cobros de Fiado</span>
-                    <h3 class="text-2xl font-black text-slate-900 mt-2" id="fin-cobros-fiado-bs">Bs. 0,00</h3>
-                    <p class="text-xs font-bold text-pink-600" id="fin-cobros-fiado-usd">$0.00 USD</p>
-                    <p class="text-[11px] text-slate-400 font-semibold mt-2 border-t pt-2" id="fin-abonos-count">0 abonos cobrados</p>
-                </div>
-
-                <!-- Lo que Ganó -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div class="w-1.5 h-full bg-emerald-500 absolute left-0 top-0"></div>
-                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Lo que ganó (Neta)</span>
-                    <h3 class="text-2xl font-black text-emerald-600 mt-2" id="fin-lo-que-gano-bs">Bs. 0,00</h3>
-                    <p class="text-xs font-bold text-emerald-600" id="fin-lo-que-gano-usd">$0.00 USD</p>
-                    <p class="text-[11px] text-slate-400 font-semibold mt-2 border-t pt-2">Ganancia neta acumulada</p>
-                </div>
-            </div>
-
-            <!-- Ventas por Categoría -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                <h3 class="font-extrabold text-slate-800 text-sm uppercase tracking-wider">Desglose de Ventas por Categoría</h3>
-                <div id="fin-category-breakdown" class="space-y-3">
-                    <!-- Barras de categoría inyectadas dinámicamente -->
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- MODALES DE LA APLICACIÓN -->
-
-    <!-- MODAL: PROCESAR PAGO / CHECKOUT -->
-    <div id="modal-checkout" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden fade-in">
-            <div class="p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                <h3 class="font-extrabold text-slate-800 text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-receipt text-blue-600"></i> Finalizar Venta
-                </h3>
-                <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="p-6 space-y-5">
-                <!-- Monto Total -->
-                <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
-                    <span class="text-xs font-black uppercase tracking-wider text-blue-600">Monto Total a Cobrar</span>
-                    <div class="text-3xl font-black text-blue-700 mt-0.5" id="checkout-total-bs">Bs. 0,00</div>
-                    <div class="text-sm font-bold text-slate-600" id="checkout-total-usd">$0.00 USD</div>
-                </div>
-
-                <!-- Método de Pago -->
-                <div class="space-y-2">
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Método de Pago</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" onclick="selectPaymentMethod('Efectivo USD')" id="pm-Efectivo USD" class="pm-btn border-2 border-blue-600 bg-blue-50/50 text-blue-700 p-3 rounded-xl font-bold text-xs flex flex-col items-center gap-1">
-                            <i class="fa-solid fa-dollar-sign text-base"></i> Efectivo USD
-                        </button>
-                        <button type="button" onclick="selectPaymentMethod('Pago Móvil')" id="pm-Pago Móvil" class="pm-btn border border-slate-200 text-slate-700 p-3 rounded-xl font-bold text-xs flex flex-col items-center gap-1">
-                            <i class="fa-solid fa-mobile-screen-button text-base"></i> Pago Móvil
-                        </button>
-                        <button type="button" onclick="selectPaymentMethod('Fiado')" id="pm-Fiado" class="pm-btn border border-slate-200 text-pink-600 p-3 rounded-xl font-bold text-xs flex flex-col items-center gap-1">
-                            <i class="fa-solid fa-handshake text-base"></i> Fiado / Crédito
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Cliente para Fiado -->
-                <div id="checkout-customer-container" class="space-y-1.5 hidden">
-                    <label class="text-xs font-extrabold text-pink-600 uppercase">Seleccionar Cliente</label>
-                    <select id="checkout-customer-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500">
-                        <!-- Clientes cargados dinámicamente -->
-                    </select>
-                </div>
-
-                <!-- Paga Con y Cambio/Vuelto -->
-                <div id="checkout-cash-container" class="space-y-2">
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Paga Con ($ USD):</label>
-                    <input type="number" id="checkout-amount-given" step="0.5" placeholder="Ej: 10.00" oninput="calculateChange()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <div class="flex justify-between text-xs font-semibold text-slate-600 pt-1">
-                        <span>Vuelto / Cambio:</span>
-                        <span id="checkout-change-display" class="font-bold text-emerald-600">$0.00 (Bs. 0,00)</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-3">
-    <!-- MODAL: REGISTRAR PROVEEDOR -->
-    <div id="modal-supplier" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden fade-in">
-            <div class="p-5 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
-                <h3 class="font-extrabold text-indigo-900 text-base">Registrar Nuevo Proveedor</h3>
-                <button onclick="closeSupplierModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form id="form-supplier" onsubmit="saveSupplier(event)" class="p-5 space-y-4">
-                <div>
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Nombre / Empresa</label>
-                    <input type="text" id="supp-name" required placeholder="Ej: Distribuidora Alimentos C.A." class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold">
-                </div>
-                <div>
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Rubro / Categoría Principal</label>
-                    <input type="text" id="supp-category" required placeholder="Ej: Víveres / Embutidos" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold">
-                </div>
-                <div>
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Teléfono de Contacto</label>
-                    <input type="text" id="supp-phone" required placeholder="Ej: 0414-9998877" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeSupplierModal()" class="px-3 py-2 text-xs font-bold text-slate-500">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-xs font-extrabold rounded-xl shadow">Guardar Proveedor</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR COMPRA / FACTURA DE PROVEEDOR -->
-    <div id="modal-supply-purchase" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden fade-in">
-            <div class="p-5 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center">
-                <h3 class="font-extrabold text-emerald-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-cart-flatbed"></i> Registrar Compra de Mercancía
-                </h3>
-                <button onclick="closeSupplyPurchaseModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form id="form-supply-purchase" onsubmit="saveSupplyPurchase(event)" class="p-5 space-y-4">
-                <div>
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Proveedor</label>
-                    <select id="purchase-supp-id" required class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800">
-                        <!-- Cargar dinámicamente -->
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs font-extrabold text-slate-600 uppercase">Monto ($ USD)</label>
-                        <input type="number" id="purchase-amount-usd" step="0.01" min="0.01" required placeholder="150.00" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold">
-                    </div>
-                    <div>
-                        <label class="text-xs font-extrabold text-slate-600 uppercase">Condición de Pago</label>
-                        <select id="purchase-type" required class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800">
-                            <option value="Credito">A Crédito (Deuda)</option>
-                            <option value="Contado">De Contado (Pagado)</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Descripción / N° Factura</label>
-                    <input type="text" id="purchase-desc" required placeholder="Ej: Factura #4023 - Víveres variados" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeSupplyPurchaseModal()" class="px-3 py-2 text-xs font-bold text-slate-500">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-extrabold rounded-xl shadow">Guardar Compra</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR PAGO A PROVEEDOR -->
-    <div id="modal-supp-pay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden fade-in">
-            <div class="p-5 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
-                <h3 class="font-extrabold text-indigo-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-hand-holding-dollar"></i> Registrar Pago a Proveedor
-                </h3>
-                <button onclick="closeSuppPayModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form id="form-supp-pay" onsubmit="saveSuppPay(event)" class="p-5 space-y-4">
-                <input type="hidden" id="supp-pay-id">
-                <div class="text-xs font-bold text-slate-600">
-                    Proveedor: <span id="supp-pay-name" class="font-extrabold text-slate-900"></span>
-                </div>
-                <div>
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Monto a Pagado ($ USD)</label>
-                    <input type="number" id="supp-pay-amount-usd" step="0.01" min="0.01" required placeholder="0.00" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-indigo-600">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeSuppPayModal()" class="px-3 py-2 text-xs font-bold text-slate-500">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-xs font-extrabold rounded-xl shadow">Confirmar Pago</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR ABONO (FIADOS) -->
-    <div id="modal-abono" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden fade-in">
-            <div class="p-5 bg-pink-50 border-b border-pink-100 flex justify-between items-center">
-                <h3 class="font-extrabold text-pink-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-money-bill-transfer"></i> Registrar Abono
-                </h3>
-                <button onclick="closeAbonoModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form id="form-abono" onsubmit="saveAbono(event)" class="p-5 space-y-4">
-                <input type="hidden" id="abono-customer-id">
-                <div class="text-xs font-bold text-slate-600">
-                    Cliente: <span id="abono-customer-name" class="font-extrabold text-slate-900"></span>
-                </div>
-                <div>
-                    <label class="text-xs font-extrabold text-slate-600 uppercase">Monto a Abonar ($ USD)</label>
-                    <input type="number" id="abono-amount-usd" step="0.01" min="0.01" required placeholder="0.00" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeAbonoModal()" class="px-3 py-2 text-xs font-bold text-slate-500">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-extrabold rounded-xl shadow">Confirmar Abono</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- TICKET TÉRMICO PARA IMPRESIÓN (IMPRESORAS 58MM) -->
-    <div id="thermal-receipt-area" class="hidden">
-        <div style="text-align: center; margin-bottom: 6px;">
-            <h2 style="font-weight: bold; font-size: 13px; margin: 0;">BODEGAPP - EL MANANTIAL</h2>
-            <p style="margin: 2px 0;">Control de Inventario & POS</p>
-            <p style="margin: 2px 0;" id="receipt-date"></p>
-        </div>
-        <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; margin-bottom: 6px;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="text-align: left; font-size: 10px;">
-                        <th>Cant/Prod</th>
-                        <th style="text-align: right;">Total ($)</th>
-                    </tr>
-                </thead>
-                <tbody id="receipt-items-body"></tbody>
-            </table>
-        </div>
-        <div style="text-align: right; margin-bottom: 6px;">
-            <p style="margin: 2px 0;">Subtotal: <span id="receipt-sub-usd"></span></p>
-            <p style="margin: 2px 0;">Tasa BCV: <span id="receipt-tasa"></span></p>
-            <h3 style="font-weight: bold; font-size: 12px; margin: 3px 0;">TOTAL: <span id="receipt-total-bs"></span></h3>
-            <p style="margin: 2px 0;">(Equivalente: <span id="receipt-total-usd"></span>)</p>
-        </div>
-        <div style="text-align: center; margin-top: 8px; font-size: 9px;">
-            <p>*** Gracias por su compra ***</p>
-        </div>
-    </div>
-
-    <!-- LÓGICA JAVASCRIPT COMPLETA Y RECEPTIVA -->
-    <script>
-        // Datos Iniciales Precargados (Seed Data)
-        const DEFAULT_CATEGORIES = [
-            { name: 'Víveres', icon: 'fa-box-archive' },
-            { name: 'Charcutería', icon: 'fa-cheese' },
-            { name: 'Carnicería', icon: 'fa-drumstick-bite' },
-            { name: 'Frutas y Hortalizas', icon: 'fa-apple-whole' },
-            { name: 'Bebidas', icon: 'fa-bottle-water' },
-            { name: 'Chuchería', icon: 'fa-cookie-bite' }
-        ];
-
-        const DEFAULT_PRODUCTS = [
-            { id: '1', name: 'Harina P.A.N. 1kg', category: 'Víveres', unitType: 'unidad', stock: 120, cost: 0.95, price: 1.15, icon: '🌾' },
-            { id: '2', name: 'Pasta Larga Plumrose 500g', category: 'Víveres', unitType: 'unidad', stock: 95, cost: 0.80, price: 1.00, icon: '🍝' },
-            { id: '3', name: 'Mavesa Mantequilla 500g', category: 'Víveres', unitType: 'unidad', stock: 70, cost: 1.80, price: 2.20, icon: '🧈' },
-            { id: '4', name: 'Queso Duro Santa Barbara', category: 'Charcutería', unitType: 'kg', stock: 15.5, cost: 4.20, price: 5.50, icon: '🧀' },
-            { id: '5', name: 'Jamón de Pierna Plumrose', category: 'Charcutería', unitType: 'kg', stock: 8.2, cost: 6.00, price: 8.00, icon: '🥓' },
-            { id: '6', name: 'Carne Molida de Res', category: 'Carnicería', unitType: 'kg', stock: 24.0, cost: 5.00, price: 6.80, icon: '🥩' },
-            { id: '7', name: 'Pollo Entero Limpio', category: 'Carnicería', unitType: 'kg', stock: 35.0, cost: 2.30, price: 3.10, icon: '🍗' },
-            { id: '8', name: 'Tomate Perita Fresh', category: 'Frutas y Hortalizas', unitType: 'kg', stock: 12.0, cost: 0.80, price: 1.40, icon: '🍅' },
-            { id: '9', name: 'Cebolla Morada', category: 'Frutas y Hortalizas', unitType: 'kg', stock: 18.5, cost: 0.90, price: 1.50, icon: '🧅' },
-            { id: '10', name: 'Papas Blancas', category: 'Frutas y Hortalizas', unitType: 'kg', stock: 4.0, cost: 0.70, price: 1.20, icon: '🥔' },
-            { id: '11', name: 'Refresco Pepsi 1.5L', category: 'Bebidas', unitType: 'unidad', stock: 40, cost: 1.10, price: 1.50, icon: '🥤' },
-            { id: '12', name: 'Pirulín 240g Latón', category: 'Chuchería', unitType: 'unidad', stock: 30, cost: 3.20, price: 4.20, icon: '🍬' }
-        ];
-
-        const DEFAULT_CUSTOMERS = [
-            { id: 'c1', name: 'María Villalba', phone: '0412-1234567', debtUSD: 3.75, history: [{ type: 'compra', desc: 'Compra a crédito', amountUSD: 3.75, date: '25-Sept' }] },
-            { id: 'c2', name: 'Luis Colmenares', phone: '0414-7654321', debtUSD: 3.00, history: [{ type: 'compra', desc: 'Compra a crédito', amountUSD: 4.00, date: '15-Sept' }, { type: 'abono', desc: 'Abono en efectivo', amountUSD: -1.00, date: '18-Sept' }] }
-        ];
-
-        const DEFAULT_SUPPLIERS = [
-            { id: 's1', name: 'Distribuidora Polar C.A.', category: 'Víveres y Cervezas', phone: '0414-1112233', debtUSD: 120.00, history: [{ type: 'compra', desc: 'Factura #9081 - Harina y Bebidas', amountUSD: 120.00, date: '01-Nov' }] },
-            { id: 's2', name: 'Charcutería Los Andes', category: 'Lácteos y Embutidos', phone: '0424-5556677', debtUSD: 45.50, history: [{ type: 'compra', desc: 'Factura #1120 - Quesos y Jamón', amountUSD: 45.50, date: '04-Nov' }] }
-        ];
-
-        // Estado Global
-        let state = {
-            tasaBCV: 70.00,
-            selectedCategory: 'ALL',
-            cart: [],
-            products: [],
-            customers: [],
-            suppliers: [],
-            sales: [],
-            abonos: [],
-            financialTimeframe: 'today'
-        };
-
-        // Inicialización al cargar la ventana
-        window.addEventListener('DOMContentLoaded', () => {
-            loadState();
-            setupEventListeners();
-            renderCategories();
-            renderPosProducts();
-            renderCart();
-            renderInventoryTable();
-            renderFiadosList();
-            renderSuppliersList();
-            renderReports();
-            renderFinancials();
-            updateBadges();
-        });
-
-        // Cargar y Guardar en LocalStorage
-        function loadState() {
-            const saved = localStorage.getItem('bodegapp_data_v2');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    state.tasaBCV = parsed.tasaBCV || 70.00;
-                    state.products = parsed.products || DEFAULT_PRODUCTS;
-                    state.customers = parsed.customers || DEFAULT_CUSTOMERS;
-                    state.suppliers = parsed.suppliers || DEFAULT_SUPPLIERS;
-                    state.sales = parsed.sales || [];
-                    state.abonos = parsed.abonos || [];
-                } catch (e) {
-                    console.error("Error al cargar estado", e);
-                    state.products = DEFAULT_PRODUCTS;
-                    state.customers = DEFAULT_CUSTOMERS;
-                    state.suppliers = DEFAULT_SUPPLIERS;
-                }
-            } else {
-                state.products = DEFAULT_PRODUCTS;
-                state.customers = DEFAULT_CUSTOMERS;
-                state.suppliers = DEFAULT_SUPPLIERS;
-                saveState();
-            }
-
-            document.querySelectorAll('.tasa-input').forEach(input => input.value = state.tasaBCV);
-        }
-
-        function saveState() {
-            localStorage.setItem('bodegapp_data_v2', JSON.stringify({
-                tasaBCV: state.tasaBCV,
-                products: state.products,
-                customers: state.customers,
-                suppliers: state.suppliers,
-                sales: state.sales,
-                abonos: state.abonos
-            }));
-        }
-
-        function resetSystemData() {
-            if (confirm("¿Desea restablecer todos los productos, ventas y fiados a los valores de prueba originales?")) {
-                localStorage.removeItem('bodegapp_data_v2');
-                location.reload();
-            }
-        }
-
-        // Listeners globales para Inputs de Tasa BCV
-        function setupEventListeners() {
-            document.querySelectorAll('.tasa-input').forEach(input => {
-                input.addEventListener('change', (e) => {
-                    const val = parseFloat(e.target.value);
-                    if (val > 0) {
-                        state.tasaBCV = val;
-                        document.querySelectorAll('.tasa-input').forEach(i => i.value = val);
-                        saveState();
-                        renderPosProducts();
-                        renderCart();
-                        renderInventoryTable();
-                        renderFiadosList();
-                        renderFinancials();
-                    }
-                });
-            });
-        }
-
-        // Navegación por pestañas
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('border-blue-600', 'text-blue-600');
-                el.classList.add('border-transparent', 'text-slate-500');
-            });
-
-            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-${tabId}`);
-            if (activeBtn) {
-                activeBtn.classList.add('border-blue-600', 'text-blue-600');
-                activeBtn.classList.remove('border-transparent', 'text-slate-500');
-            }
-
-            if (tabId === 'inventario') renderInventoryTable();
-            if (tabId === 'fiados') renderFiadosList();
-            if (tabId === 'proveedores') renderSuppliersList();
-            if (tabId === 'reportes') renderReports();
-            if (tabId === 'analisis') renderFinancials();
-        }
-
-        function updateBadges() {
-            const lowStock = state.products.filter(p => p.stock <= 5).length;
-            document.getElementById('badge-reponer').textContent = lowStock;
-
-            const totalFiados = state.customers.filter(c => c.debtUSD > 0).length;
-            document.getElementById('badge-fiados').textContent = totalFiados;
-
-            const totalSuppliersDebt = state.suppliers.filter(s => s.debtUSD > 0).length;
-            document.getElementById('badge-proveedores').textContent = totalSuppliersDebt;
-        }
-<!-- ... existing code ... backdrop-blur-sm ... -->
-
-        // ==========================================
-        // VISTA PROVEEDORES Y CUENTAS POR PAGAR
-        // ==========================================
-        function renderSuppliersList() {
-            const grid = document.getElementById('suppliers-grid');
-            const search = (document.getElementById('prov-search')?.value || '').toLowerCase();
-
-            const filtered = state.suppliers.filter(s => s.name.toLowerCase().includes(search) || s.category.toLowerCase().includes(search));
-            const totalDebtUSD = state.suppliers.reduce((acc, s) => acc + s.debtUSD, 0);
-            const totalDebtBs = totalDebtUSD * state.tasaBCV;
-
-            document.getElementById('prov-total-cxp-bs').textContent = `Bs. ${totalDebtBs.toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            document.getElementById('prov-total-cxp-usd').textContent = `$${totalDebtUSD.toFixed(2)} USD Pendientes de Pago`;
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 font-semibold">No hay proveedores registrados.</div>`;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(s => {
-                const debtBs = s.debtUSD * state.tasaBCV;
-                return `
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h4 class="font-extrabold text-slate-900 text-base">${s.name}</h4>
-                                <span class="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">${s.category}</span>
-                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-phone text-[10px]"></i> ${s.phone}</p>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-lg font-black ${s.debtUSD > 0 ? 'text-indigo-900' : 'text-emerald-600'}">Bs. ${debtBs.toLocaleString('es-VE', {minimumFractionDigits:2})}</div>
-                                <div class="text-xs font-bold text-slate-500">$${s.debtUSD.toFixed(2)} USD</div>
-                            </div>
-                        </div>
-
-                        <!-- Historial de compras o pagos -->
-                        <div class="bg-slate-50 rounded-xl p-2.5 space-y-1 text-xs border border-slate-100">
-                            ${(s.history || []).slice(0, 2).map(h => `
-                                <div class="flex justify-between items-center text-slate-600">
-                                    <span>${h.date} · ${h.desc}</span>
-                                    <span class="font-bold ${h.amountUSD > 0 ? 'text-indigo-600' : 'text-emerald-600'}">
-                                        ${h.amountUSD > 0 ? '+' : ''}$${Math.abs(h.amountUSD).toFixed(2)}
-                                    </span>
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <button onclick="openSuppPayModal('${s.id}')" ${s.debtUSD <= 0 ? 'disabled' : ''} class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-hand-holding-dollar"></i> Registrar Pago a Proveedor
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function openSupplierModal() { document.getElementById('modal-supplier').classList.remove('hidden'); }
-        function closeSupplierModal() { document.getElementById('modal-supplier').classList.add('hidden'); }
-
-        function saveSupplier(e) {
-            e.preventDefault();
-            const name = document.getElementById('supp-name').value;
-            const category = document.getElementById('supp-category').value;
-            const phone = document.getElementById('supp-phone').value;
-
-            state.suppliers.unshift({
-                id: 'SUP' + Date.now(),
-                name, category, phone, debtUSD: 0, history: []
-            });
-
-            saveState();
-            closeSupplierModal();
-            renderSuppliersList();
-            updateBadges();
-        }
-
-        function openSupplyPurchaseModal() {
-            const select = document.getElementById('purchase-supp-id');
-            select.innerHTML = state.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.category})</option>`).join('');
-            document.getElementById('modal-supply-purchase').classList.remove('hidden');
-        }
-
-        function closeSupplyPurchaseModal() { document.getElementById('modal-supply-purchase').classList.add('hidden'); }
-
-        function saveSupplyPurchase(e) {
-            e.preventDefault();
-            const suppId = document.getElementById('purchase-supp-id').value;
-            const amountUSD = parseFloat(document.getElementById('purchase-amount-usd').value) || 0;
-            const purchaseType = document.getElementById('purchase-type').value;
-            const desc = document.getElementById('purchase-desc').value;
-
-            const supp = state.suppliers.find(s => s.id === suppId);
-            if (supp && amountUSD > 0) {
-                if (purchaseType === 'Credito') {
-                    supp.debtUSD += amountUSD;
-                }
-                supp.history.unshift({
-                    type: 'compra',
-                    desc: `${desc} (${purchaseType})`,
-                    amountUSD: amountUSD,
-                    date: new Date().toLocaleDateString('es-VE', { month: 'short', day: 'numeric' })
-                });
-
-                saveState();
-                closeSupplyPurchaseModal();
-                renderSuppliersList();
-                updateBadges();
-            }
-        }
-
-        function openSuppPayModal(suppId) {
-            const supp = state.suppliers.find(s => s.id === suppId);
-            if (!supp) return;
-
-            document.getElementById('supp-pay-id').value = supp.id;
-            document.getElementById('supp-pay-name').textContent = supp.name;
-            document.getElementById('supp-pay-amount-usd').value = '';
-            document.getElementById('modal-supp-pay').classList.remove('hidden');
-        }
-
-        function closeSuppPayModal() { document.getElementById('modal-supp-pay').classList.add('hidden'); }
-
-        function saveSuppPay(e) {
-            e.preventDefault();
-            const suppId = document.getElementById('supp-pay-id').value;
-            const amountUSD = parseFloat(document.getElementById('supp-pay-amount-usd').value) || 0;
-
-            const supp = state.suppliers.find(s => s.id === suppId);
-            if (supp && amountUSD > 0) {
-                supp.debtUSD = Math.max(0, supp.debtUSD - amountUSD);
-                supp.history.unshift({
-                    type: 'pago',
-                    desc: 'Pago realizado',
-                    amountUSD: -amountUSD,
-                    date: new Date().toLocaleDateString('es-VE', { month: 'short', day: 'numeric' })
-                });
-
-                saveState();
-                closeSuppPayModal();
-                renderSuppliersList();
-                updateBadges();
-            }
-        }
-
-        // ==========================================
-        // VISTA REPORTES Y EXPORTACIÓN POR WHATSAPP / CSV
-        // ==========================================
-        function renderReports() {
-            const now = new Date();
-            const todayStr = now.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
-            // Ventas de hoy
-            const todaySales = state.sales.filter(s => new Date(s.timestamp).toDateString() === now.toDateString());
-            const totalUSD = todaySales.reduce((acc, s) => acc + s.totalUSD, 0);
-            const totalBs = totalUSD * state.tasaBCV;
-            const totalCostUSD = todaySales.reduce((acc, s) => acc + s.totalCostUSD, 0);
-            const profitUSD = totalUSD - totalCostUSD;
-
-            let reportText = `🛒 *REPORTES DIARIOS - BODEGAPP*\n📅 *Fecha:* ${todayStr}\n💵 *Tasa BCV:* Bs. ${state.tasaBCV.toFixed(2)}\n----------------------------------------\n`;
-            reportText += `📊 *Ventas Realizadas:* ${todaySales.length}\n`;
-            reportText += `💰 *Total Vendido:* $${totalUSD.toFixed(2)} USD (Bs. ${totalBs.toLocaleString('es-VE', {minimumFractionDigits:2})})\n`;
-            reportText += `📈 *Ganancia Neta Estimada:* $${profitUSD.toFixed(2)} USD\n----------------------------------------\n`;
-            reportText += `*Desglose de Ventas:*\n`;
-
-            todaySales.forEach((s, idx) => {
-                reportText += `${idx + 1}. Ticket #${s.id.slice(-4)} - $${s.totalUSD.toFixed(2)} (${s.paymentMethod})\n`;
-            });
-
-            reportText += `\n✨ *Generado desde BodegApp PRO*`;
-            document.getElementById('whatsapp-report-text').value = reportText;
-
-            // Reporte de Faltantes (Low Stock)
-            const lowStockProducts = state.products.filter(p => p.stock <= 5);
-            let lowStockText = `🚨 *PRODUCTOS POR REPONER - INVENTARIO*\n📅 *Fecha:* ${todayStr}\n----------------------------------------\n`;
-
-            if (lowStockProducts.length === 0) {
-                lowStockText += `✅ ¡Todos los productos cuentan con suficiente inventario!`;
-            } else {
-                lowStockProducts.forEach((p, idx) => {
-                    lowStockText += `${idx + 1}. 📦 *${p.name}* -> Stock Actual: ${p.stock} ${p.unitType === 'kg' ? 'Kg' : 'uds'}\n`;
-                });
-            }
-            document.getElementById('whatsapp-lowstock-text').value = lowStockText;
-        }
-
-        function copyWhatsAppReport() {
-            const textarea = document.getElementById('whatsapp-report-text');
-            textarea.select();
-            document.execCommand('copy');
-            alert("Reporte copiado al portapapeles listo para pegar en WhatsApp.");
-        }
-
-        function copyLowStockReport() {
-            const textarea = document.getElementById('whatsapp-lowstock-text');
-            textarea.select();
-            document.execCommand('copy');
-            alert("Lista de reposición copiada al portapapeles.");
-        }
-
-        function sendToWhatsAppDirect() {
-            const text = encodeURIComponent(document.getElementById('whatsapp-report-text').value);
-            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-        }
-
-        function exportToCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,ID,Nombre,Categoria,Unidad,Stock,CostoUSD,PrecioUSD,PrecioBs\n";
-            state.products.forEach(p => {
-                const precioBs = (p.price * state.tasaBCV).toFixed(2);
-                csvContent += `${p.id},"${p.name}","${p.category}",${p.unitType},${p.stock},${p.cost},${p.price},${precioBs}\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Inventario_BodegApp_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+            <div class="bg-gradient-to-r 
