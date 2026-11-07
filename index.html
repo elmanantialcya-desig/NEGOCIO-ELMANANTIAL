@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BodegApp - Punto de Venta & Contabilidad</title>
+    <title>BodegApp - Control de Inventario, Fiados y POS</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for icons -->
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -19,305 +19,295 @@
                     },
                     colors: {
                         brand: {
-                            50: '#f0f3ff',
-                            100: '#e0e7ff',
-                            500: '#3b82f6',
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
                             600: '#1d4ed8',
-                            700: '#1e3a8a',
-                            800: '#0f172a',
+                            700: '#1e40af',
+                            800: '#1e3a8a',
                         },
-                        accent: {
-                            pink: '#ec4899',
-                            rose: '#f43f5e',
-                            purple: '#8b5cf6'
-                        }
+                        pinkAccent: '#ec4899',
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Custom Scrollbar for smooth UI */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        body { font-family: 'Inter', sans-serif; }
+        /* Thermal Receipt Styles for Print */
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-print-area, #receipt-print-area * { visibility: visible; }
+            #receipt-print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 58mm;
+                padding: 5px;
+                font-family: monospace;
+                font-size: 11px;
+            }
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        .tab-btn.active {
-            color: #1e3a8a;
-            border-bottom-color: #ec4899;
-            background-color: #f8fafc;
-        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-pink-500 selection:text-white">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
 
-    <!-- Header Navigation -->
+    <!-- HEADER / NAVIGATION -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3 gap-3">
                 <!-- Logo & Brand -->
-                <div class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-tr from-brand-700 via-brand-600 to-accent-pink p-2.5 rounded-xl text-white shadow-md">
-                        <i class="fa-solid font-bold fa-store text-xl"></i>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                            <i class="fa-solid font-bold text-xl fa-store"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">BodegApp</h1>
+                                <span class="bg-pink-100 text-pink-600 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">PRO</span>
+                            </div>
+                            <p class="text-xs text-slate-500 font-medium">Control de Inventario, Fiados y POS</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 class="text-xl font-bold tracking-tight text-slate-900 leading-none">BodegApp <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent-pink/10 text-accent-pink border border-accent-pink/20">PRO</span></h1>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">Control de Inventario & Fiados</p>
+
+                    <!-- Dynamic Exchange Rate (Mobile top right) -->
+                    <div class="flex md:hidden items-center bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 gap-1">
+                        <span class="text-[10px] font-bold text-slate-500">BCV:</span>
+                        <input type="number" id="tasa-bcv-mobile" step="0.01" class="w-14 text-xs font-bold bg-transparent text-right outline-none text-brand-700" value="70.00" onchange="updateExchangeRate(this.value)">
+                        <span class="text-[10px] text-slate-500">Bs</span>
                     </div>
                 </div>
 
-                <!-- Currency Rate Header -->
-                <div class="hidden sm:flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 space-x-2">
-                    <span class="text-xs text-slate-500 font-semibold uppercase">Tasa BCV/USD:</span>
-                    <div class="flex items-center space-x-1">
-                        <span class="text-xs font-bold text-slate-700">Bs.</span>
-                        <input type="number" id="tasaBcvInput" step="0.1" min="1" value="70.00" onchange="app.updateTasa(this.value)" class="w-16 bg-white border border-slate-300 rounded text-center text-xs font-bold py-0.5 text-brand-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <!-- Rate Control & Quick Actions (Desktop) -->
+                <div class="hidden md:flex items-center gap-4">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-inner">
+                        <i class="fa-solid fa-coins text-amber-500"></i>
+                        <span class="text-xs font-bold text-slate-600">TASA BCV / USD:</span>
+                        <div class="flex items-center gap-1 font-bold text-sm text-slate-900">
+                            <span>Bs.</span>
+                            <input type="number" id="tasa-bcv-desktop" step="0.01" class="w-20 bg-white border border-slate-300 rounded px-2 py-0.5 text-right font-extrabold text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500" value="70.00" onchange="updateExchangeRate(this.value)">
+                        </div>
                     </div>
-                </div>
 
-                <!-- Header Actions -->
-                <div class="flex items-center space-x-2">
-                    <button onclick="app.resetDataConfirm()" class="text-xs text-slate-400 hover:text-rose-500 px-2 py-1 transition-colors" title="Reiniciar datos de prueba">
-                        <i class="fa-solid fa-rotate-right mr-1"></i> Reset
+                    <button onclick="resetDataToDefault()" title="Restablecer datos de prueba" class="text-xs text-slate-500 hover:text-red-600 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-rotate-left"></i> Resetear
                     </button>
-                    <div class="sm:hidden flex items-center bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-                        <span class="text-xs text-slate-500 font-bold mr-1">Bs/USD:</span>
-                        <input type="number" id="tasaBcvInputMobile" step="0.1" value="70.00" onchange="app.updateTasa(this.value)" class="w-12 bg-white border border-slate-300 rounded text-center text-xs font-bold text-brand-700">
-                    </div>
                 </div>
             </div>
 
             <!-- Navigation Tabs -->
-            <nav class="flex space-x-1 overflow-x-auto border-t border-slate-100 no-scrollbar" id="mainTabs">
-                <button onclick="app.switchTab('pos')" id="tab-pos" class="tab-btn active px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-brand-700 whitespace-nowrap transition-all flex items-center">
-                    <i class="fa-solid fa-cash-register mr-2 text-base"></i> Punto de Venta
+            <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-100 pt-1 overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-brand-600 text-brand-600 flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-cash-register"></i> Punto de Venta
                 </button>
-                <button onclick="app.switchTab('inventario')" id="tab-inventario" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-brand-700 whitespace-nowrap transition-all flex items-center">
-                    <i class="fa-solid fa-boxes-stacked mr-2 text-base"></i> Inventario
+                <button onclick="switchTab('inventario')" id="tab-inventario" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-boxes-stacked"></i> Inventario
+                    <span id="badge-reponer" class="bg-amber-100 text-amber-700 text-xs font-bold px-1.5 py-0.5 rounded-full">0</span>
                 </button>
-                <button onclick="app.switchTab('fiados')" id="tab-fiados" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-brand-700 whitespace-nowrap transition-all flex items-center">
-                    <i class="fa-solid fa-users-viewfinder mr-2 text-base"></i> Fiados y Créditos
-                    <span id="badgeFiadosPending" class="ml-2 bg-rose-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">0</span>
+                <button onclick="switchTab('fiados')" id="tab-fiados" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Fiados y Créditos
+                    <span id="badge-fiados" class="bg-rose-100 text-rose-600 text-xs font-bold px-1.5 py-0.5 rounded-full">0</span>
                 </button>
-                <button onclick="app.switchTab('analisis')" id="tab-analisis" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-brand-700 whitespace-nowrap transition-all flex items-center">
-                    <i class="fa-solid fa-chart-pie mr-2 text-base"></i> Análisis Financiero
+                <button onclick="switchTab('analisis')" id="tab-analisis" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-chart-pie"></i> Análisis Financiero
                 </button>
             </nav>
         </div>
     </header>
 
-    <!-- Main Dynamic Content Container -->
+    <!-- MAIN CONTENT CONTAINER -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
 
-        <!-- SECTION 1: PUNTO DE VENTA (POS) -->
+        <!-- TAB 1: PUNTO DE VENTA (POS) -->
         <section id="sec-pos" class="tab-content grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Left Side: Catalog & Products -->
-            <div class="lg:col-span-7 xl:col-span-8 space-y-4">
-                <!-- Search & Filters -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-3 items-center justify-between">
+            <!-- Left Panel: Categories & Products Search -->
+            <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-5">
+                
+                <!-- Search & Filters Bar -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row gap-3 items-center justify-between">
                     <div class="relative w-full">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="posSearch" onkeyup="app.renderPosProducts()" placeholder="Buscar por nombre de producto..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+                        <input type="text" id="pos-search" placeholder="Buscar por nombre de producto..." oninput="renderPosProducts()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
                     </div>
                 </div>
 
-                <!-- Category Pills -->
-                <div class="flex space-x-2 overflow-x-auto pb-1 no-scrollbar" id="posCategories">
-                    <!-- Dynamic rendering of categories -->
+                <!-- Categories Grid (Inspired by Mobile Reference) -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Categorías de Productos</h2>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5" id="pos-categories-container">
+                        <!-- Rendered Dynamically -->
+                    </div>
                 </div>
 
                 <!-- Products Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 gap-3.5" id="posProductGrid">
-                    <!-- Dynamic products rendered here -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <span id="pos-current-category-title">Todos los productos</span>
+                            <span id="pos-product-count" class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">0</span>
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto max-h-[500px] p-1" id="pos-products-grid">
+                        <!-- Products rendered here -->
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Side: Current Order / Cart -->
+            <!-- Right Panel: Order Cart (Orden Actual) -->
             <div class="lg:col-span-5 xl:col-span-4">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-180px)] sticky top-20">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 flex flex-col h-full sticky top-24 max-h-[calc(100vh-7rem)]">
+                    
                     <!-- Cart Header -->
                     <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
-                        <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-cart-shopping text-brand-700"></i>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-cart-shopping text-brand-600"></i>
                             <h2 class="font-bold text-slate-800">Orden Actual</h2>
                         </div>
-                        <button onclick="app.clearCart()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold px-2 py-1 rounded hover:bg-rose-50 transition-colors">
-                            <i class="fa-solid fa-trash-can mr-1"></i> Vaciar
+                        <button onclick="clearCart()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1 px-2 py-1 rounded hover:bg-rose-50 transition">
+                            <i class="fa-solid fa-trash-can"></i> Vaciar
                         </button>
                     </div>
 
-                    <!-- Cart Item List -->
-                    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cartItemList">
-                        <!-- Items rendered here -->
+                    <!-- Cart Items List -->
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items-container">
+                        <!-- Cart Items Rendered Here -->
                     </div>
 
-                    <!-- Cart Footer / Summary -->
-                    <div class="p-4 border-t border-slate-100 bg-slate-50/80 rounded-b-2xl space-y-3">
-                        <div class="space-y-1 text-sm">
+                    <!-- Cart Summary Footer -->
+                    <div class="p-4 bg-slate-50 border-t border-slate-200/80 rounded-b-2xl space-y-3">
+                        <div class="space-y-1.5 text-xs">
                             <div class="flex justify-between text-slate-500">
-                                <span>Subtotal USD</span>
-                                <span font-medium text-slate-700 id="cartSubtotalUsd">$0.00</span>
+                                <span>Subtotal USD:</span>
+                                <span class="font-semibold text-slate-700" id="cart-subtotal-usd">$0.00</span>
                             </div>
-                            <div class="flex justify-between text-slate-500 text-xs">
-                                <span>Tasa de cambio</span>
-                                <span>Bs. <span id="cartTasaDisplay">70.00</span> / $</span>
-                            </div>
-                            <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
-                                <div>
-                                    <span class="text-base font-bold text-slate-900 block leading-tight">TOTAL</span>
-                                    <span class="text-xs text-slate-500">Monto final a cobrar</span>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xl font-black text-brand-700" id="cartTotalBs">Bs. 0,00</div>
-                                    <div class="text-sm font-semibold text-emerald-600" id="cartTotalUsd">$0.00</div>
-                                </div>
+                            <div class="flex justify-between text-slate-500">
+                                <span>Tasa de Cambio:</span>
+                                <span class="font-medium text-slate-600" id="cart-tasa-display">Bs. 70.00 / $</span>
                             </div>
                         </div>
 
-                        <button onclick="app.openCheckoutModal()" id="btnCheckout" disabled class="w-full py-3.5 px-4 bg-brand-700 disabled:bg-slate-300 disabled:cursor-not-allowed hover:bg-brand-800 text-white font-bold rounded-xl shadow-lg shadow-brand-700/20 active:scale-[0.99] transition-all flex items-center justify-center space-x-2 text-base">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>Procesar Pago</span>
+                        <div class="pt-2 border-t border-slate-200 flex justify-between items-end">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total a Cobrar</span>
+                                <div class="text-2xl font-black text-brand-700 leading-none" id="cart-total-bs">Bs. 0,00</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-slate-600" id="cart-total-usd">$0.00</div>
+                            </div>
+                        </div>
+
+                        <button onclick="openCheckoutModal()" id="btn-procesar-pago" disabled class="w-full py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 active:scale-[0.99] transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i> Procesar Pago
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- TAB 2: INVENTARIO -->
+        <section id="sec-inventario" class="tab-content hidden space-y-5">
+            <!-- Header Stats & Search -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Capital en Inventario</p>
+                        <h3 class="text-2xl font-black text-slate-900 mt-1" id="inv-total-capital-bs">Bs. 0.00</h3>
+                        <p class="text-xs font-semibold text-brand-600" id="inv-total-capital-usd">$0.00 USD</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 text-brand-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-boxes-packing"></i>
+                    </div>
+                </div>
 
-        <!-- SECTION 2: INVENTARIO -->
-        <section id="sec-inventario" class="tab-content hidden space-y-6">
-            <!-- Inventory KPI Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                    <div class="p-3 bg-brand-50 text-brand-700 rounded-xl">
-                        <i class="fa-solid fa-boxes-packing text-2xl"></i>
-                    </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Productos</p>
-                        <h3 class="text-2xl font-bold text-slate-900 mt-0.5" id="invTotalProducts">0</h3>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Total Productos</p>
+                        <h3 class="text-2xl font-black text-slate-900 mt-1" id="inv-total-count">0</h3>
+                        <p class="text-xs text-slate-500 font-medium">Registrados en catálogo</p>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-list-check"></i>
                     </div>
                 </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                    <div class="p-3 bg-rose-50 text-rose-500 rounded-xl">
-                        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
-                    </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock Bajo (Alertas)</p>
-                        <h3 class="text-2xl font-bold text-rose-600 mt-0.5" id="invLowStock">0</h3>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Por Reponer (Stock Bajo)</p>
+                        <h3 class="text-2xl font-black text-amber-600 mt-1" id="inv-low-stock-count">0</h3>
+                        <p class="text-xs text-amber-600 font-medium">Requieren reabastecimiento</p>
                     </div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                        <i class="fa-solid fa-vault text-2xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor Inventario (USD)</p>
-                        <h3 class="text-2xl font-bold text-emerald-600 mt-0.5" id="invTotalValue">$0.00</h3>
-                        <p class="text-xs text-slate-400" id="invTotalValueBs">Bs. 0.00</p>
+                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Toolbar & Controls -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div class="flex flex-1 gap-3 w-full sm:w-auto">
-                    <div class="relative flex-1">
+            <!-- Toolbar & Actions -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative w-full md:w-72">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="invSearch" onkeyup="app.renderInventory()" placeholder="Buscar en inventario..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <input type="text" id="inv-search" placeholder="Buscar en inventario..." oninput="renderInventoryTable()" class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
-                    <select id="invCatFilter" onchange="app.renderInventory()" class="bg-slate-50 border border-slate-200 rounded-xl text-sm px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <select id="inv-filter-category" onchange="renderInventoryTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                         <option value="ALL">Todas las Categorías</option>
-                        <option value="Víveres">Víveres</option>
-                        <option value="Frutas y Hortalizas">Frutas y Hortalizas</option>
-                        <option value="Charcutería">Charcutería</option>
-                        <option value="Bebidas">Bebidas</option>
-                        <option value="Limpieza">Limpieza</option>
-                        <option value="Otros">Otros</option>
                     </select>
                 </div>
-                <button onclick="app.openProductModal()" class="w-full sm:w-auto px-4 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold text-sm rounded-xl shadow-md flex items-center justify-center space-x-2 transition-all">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Agregar Producto</span>
+                <button onclick="openProductModal()" class="w-full md:w-auto px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-plus"></i> Añadir Nuevo Producto
                 </button>
             </div>
 
             <!-- Inventory Table -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider">
                                 <th class="p-4">Producto</th>
                                 <th class="p-4">Categoría</th>
-                                <th class="p-4">Tipo Unidad</th>
                                 <th class="p-4">Stock Actual</th>
-                                <th class="p-4">Costo USD</th>
-                                <th class="p-4">Precio USD</th>
-                                <th class="p-4 text-right">Acciones</th>
+                                <th class="p-4">Costo USD / Bs</th>
+                                <th class="p-4">Venta USD / Bs</th>
+                                <th class="p-4 text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="invTableBody" class="divide-y divide-slate-100">
-                            <!-- Rows rendered dynamically -->
+                        <tbody id="inventory-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Table rows rendered dynamically -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-
-        <!-- SECTION 3: FIADOS Y CRÉDITOS -->
+        <!-- TAB 3: FIADOS Y CRÉDITOS -->
         <section id="sec-fiados" class="tab-content hidden space-y-6">
-            <!-- Credit Balance Header -->
-            <div class="bg-gradient-to-r from-brand-800 to-brand-700 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <!-- Header Debt Summary -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Balance General de Créditos</span>
-                    <h2 class="text-3xl font-black mt-1" id="totalPorCobrarBs">Bs. 0,00</h2>
-                    <p class="text-sm font-semibold text-emerald-300" id="totalPorCobrarUsd">Equivalente a $0.00 USD</p>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-300">Total por Cobrar en Fiados</span>
+                    <h2 class="text-3xl font-black mt-1 text-white" id="fiados-total-bs">Bs. 0,00</h2>
+                    <p class="text-sm font-medium text-emerald-400 mt-0.5" id="fiados-total-usd">$0.00 USD</p>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="app.openCustomerModal()" class="px-4 py-2.5 bg-accent-pink hover:bg-accent-rose text-white font-semibold rounded-xl text-sm shadow-md transition-all flex items-center space-x-2">
-                        <i class="fa-solid fa-user-plus"></i>
-                        <span>Nuevo Cliente Fiado</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="openCustomerModal()" class="px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Registrar Nuevo Cliente
                     </button>
                 </div>
             </div>
 
-            <!-- Customer Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="fiadosCustomerGrid">
-                <!-- Customer cards rendered dynamically -->
-            </div>
-        </section>
-
-
-        <!-- SECTION 4: ANÁLISIS FINANCIERO -->
-        <section id="sec-analisis" class="tab-content hidden space-y-6">
-            <!-- Header Controls & Timeframe -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">Análisis Financiero & Ganancias</h2>
-                    <p class="text-xs text-slate-500">Métricas reales basadas en costo e inventario de productos</p>
-                </div>
-                <div class="flex bg-slate-100 p-1 rounded-xl space-x-1">
-                    <button onclick="app.setPeriod('hoy')" id="btnPeriod-hoy" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-700 shadow-sm">Hoy</button>
-                    <button onclick="app.setPeriod('7dias')" id="btnPeriod-7dias" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">7 Días</button>
-                    <button onclick="app.setPeriod('30dias')" id="btnPeriod-30dias" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">30 Días</button>
-                </div>
-            </div>
-
-            <!-- 4 Financial Dashboard Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Card 1: Ventas -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-2 h-full bg-brand-500"></div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lo que Vendió</p>
-                    <h3 class="text-2xl font-black text-slate-9
+            <!-- Customer Search & Debt List -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-lg">Clientes con Cuenta Abierta</h3>
+                    <div class="relative w-64">
+                        <input type="text" id="fiados-search" placeholder="Buscar cliente..." oninput="renderFiadosList()" class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+         
