@@ -1,257 +1,890 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS & Inventario - El Manantial</title>
-    <!-- Supabase Client CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>BodegApp - Punto de Venta e Inventario</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Alpine.js (para la reactividad y gestión de estado) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#0F2552',
+                            pink: '#E6007E',
+                            pinkHover: '#C4006B',
+                            lightBg: '#F3F5F9',
+                            cardBg: '#FFFFFF'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --primary-blue: #1a73e8;
-            --text-main: #202124;
-            --text-secondary: #5f6368;
-            --border-color: #dadce0;
+        [x-cloak] { display: none !important; }
+        /* Style scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .user-badge {
-            background: #e8f0fe;
-            color: var(--primary-blue);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        h2 { margin-top: 0; font-size: 18px; color: var(--primary-blue); }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
-        }
-        th { color: var(--text-secondary); background: #fafafa; }
-        .btn {
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-        }
-        .btn:hover { background: #1557b0; }
-        .badge-stock {
-            padding: 4px 8px;
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
             border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
         }
-        .stock-ok { background: #e6f4ea; color: #137333; }
-        .stock-low { background: #fce8e6; color: #c5221f; }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased selection:bg-brand-pink selection:text-white" x-data="bodegApp()" x-init="initApp()">
 
-    <header>
-        <h1>Negocio El Manantial</h1>
-        <div>
-            <span id="rolUsuarioBadge" class="user-badge">Cargando rol...</span>
+    <!-- CONTENEDOR PRINCIPAL RESPONSIVO -->
+    <div class="min-h-screen flex flex-col max-w-md md:max-w-4xl lg:max-w-6xl mx-auto bg-white shadow-2xl relative pb-20 md:pb-6">
+        
+        <!-- HEADER TOP BAR -->
+        <header class="bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-30 flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-2">
+                <div class="flex items-center text-brand-blue font-extrabold text-2xl tracking-tight">
+                    <span>BODEG</span><span class="text-teal-500">App</span>
+                </div>
+            </div>
+
+            <!-- Tasa del Día & Selector Global -->
+            <div class="flex items-center gap-2">
+                <div class="bg-slate-50 border border-slate-200 rounded-full px-3 py-1 flex items-center gap-1 text-xs md:text-sm font-semibold text-slate-700">
+                    <span class="text-slate-400">Tasa:</span>
+                    <span class="text-emerald-600 font-bold">Bs.</span>
+                    <input type="number" step="0.01" x-model.number="exchangeRate" @change="saveState()" class="w-16 md:w-20 bg-transparent text-right font-extrabold text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-pink rounded px-1">
+                </div>
+
+                <button @click="toggleCurrencyDisplay()" class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-brand-blue hover:bg-slate-200 transition">
+                    <span x-text="showInBs ? 'Bs' : '$'"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENIDO DINÁMICO POR VISTA -->
+        <main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
+            <!-- ================= VISTA 1: VENDER / CARRITO ================= -->
+            <section x-show="currentTab === 'vender'" x-cloak class="space-y-4">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <h1 class="text-2xl font-black text-brand-blue">Vender</h1>
+                        <p class="text-xs text-slate-400 font-medium">Paso 1 de 2 · Bodega Principal</p>
+                    </div>
+                    <button @click="openProductSelectorModal = true" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Agregar Producto</span>
+                    </button>
+                </div>
+
+                <!-- Lista de Carrito -->
+                <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-4">
+                    <div class="flex items-center gap-2 text-slate-700 font-bold text-sm border-b pb-2">
+                        <i data-lucide="shopping-cart" class="w-4 h-4 text-brand-pink"></i>
+                        <span>Carrito</span>
+                    </div>
+
+                    <template x-if="cart.length === 0">
+                        <div class="text-center py-12 text-slate-400 space-y-2">
+                            <i data-lucide="shopping-bag" class="w-12 h-12 mx-auto stroke-1 text-slate-300"></i>
+                            <p class="text-sm">El carrito está vacío</p>
+                            <button @click="openProductSelectorModal = true" class="mt-2 text-xs font-bold text-brand-pink underline">Explorar productos</button>
+                        </div>
+                    </template>
+
+                    <div class="divide-y divide-slate-100 max-h-[50vh] overflow-y-auto pr-1">
+                        <template x-for="(item, index) in cart" :key="item.id">
+                            <div class="py-3 flex items-center justify-between gap-2">
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-slate-800 text-sm leading-tight" x-text="item.name"></h4>
+                                    <p class="text-xs text-slate-400 font-medium mt-0.5">
+                                        <span x-text="formatCurrency(item.priceUsd)"></span> c/u
+                                        <span class="ml-1 text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 uppercase font-semibold" x-text="item.unit"></span>
+                                    </p>
+                                </div>
+
+                                <!-- Modificador de Cantidad -->
+                                <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-full border border-slate-200">
+                                    <button @click="updateCartQty(index, -1)" class="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-sm">
+                                        -
+                                    </button>
+                                    
+                                    <template x-if="item.unit === 'kg'">
+                                        <input type="number" step="0.05" min="0.01" x-model.number="item.qty" @input="saveState()" class="w-12 text-center text-xs font-bold bg-transparent border-b border-transparent focus:border-brand-pink focus:outline-none">
+                                    </template>
+                                    <template x-if="item.unit !== 'kg'">
+                                        <span class="w-8 text-center text-xs font-bold text-slate-800" x-text="item.qty"></span>
+                                    </template>
+
+                                    <button @click="updateCartQty(index, 1)" class="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-sm">
+                                        +
+                                    </button>
+                                </div>
+
+                                <!-- Subtotal -->
+                                <div class="text-right min-w-[80px]">
+                                    <p class="font-extrabold text-slate-900 text-xs md:text-sm" x-text="formatCurrency(item.priceUsd * item.qty)"></p>
+                                    <button @click="removeFromCart(index)" class="text-[10px] text-red-500 hover:underline">Eliminar</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Resumen del Carrito -->
+                    <div class="border-t border-slate-100 pt-4 mt-2 space-y-2">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-xs text-slate-500 font-bold uppercase">Total acumulado</span>
+                            <div class="text-right">
+                                <span class="text-xl md:text-2xl font-black text-brand-blue" x-text="formatBs(getCartTotalUsd() * exchangeRate)"></span>
+                                <div class="text-xs font-bold text-slate-400" x-text="'USD ' + getCartTotalUsd().toFixed(2)"></div>
+                            </div>
+                        </div>
+
+                        <!-- Botón Cobro -->
+                        <button @click="prepareCheckout()" :disabled="cart.length === 0" class="w-full bg-brand-blue hover:bg-slate-900 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+                            <span>Continuar al cobro</span>
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                        <p class="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1">
+                            <i data-lucide="lock" class="w-3 h-3"></i> Los métodos de pago se abren al confirmar esta lista.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VISTA 2: INVENTARIO ================= -->
+            <section x-show="currentTab === 'inventario'" x-cloak class="space-y-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-2xl font-black text-brand-blue">Inventario</h1>
+                        <p class="text-xs text-slate-400 font-medium" x-text="products.length + ' productos registrados'"></p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Capital Invertido</span>
+                        <span class="text-sm font-black text-emerald-600" x-text="formatCurrency(getTotalInventoryCapitalUsd())"></span>
+                    </div>
+                </div>
+
+                <!-- Buscador y Categorías -->
+                <div class="space-y-2">
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                        <input type="text" x-model="searchQuery" placeholder="Buscar producto..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-pink/30">
+                    </div>
+
+                    <!-- Filtros por categoría -->
+                    <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs">
+                        <button @click="selectedCategoryFilter = 'todas'" :class="selectedCategoryFilter === 'todas' ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition">
+                            Todas
+                        </button>
+                        <template x-for="cat in categories" :key="cat">
+                            <button @click="selectedCategoryFilter = cat" :class="selectedCategoryFilter === cat ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition" x-text="cat">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Botón Nuevo Producto -->
+                <button @click="openProductModal()" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Crear Nuevo Producto</span>
+                </button>
+
+                <!-- Tabla de Productos -->
+                <div class="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                    <div class="divide-y divide-slate-100">
+                        <template x-for="prod in filteredProducts" :key="prod.id">
+                            <div class="p-3.5 flex items-center justify-between hover:bg-slate-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs uppercase" x-text="prod.name.substring(0, 2)"></div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 text-sm" x-text="prod.name"></h4>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-[10px] bg-slate-100 font-semibold px-2 py-0.5 rounded text-slate-600" x-text="prod.category"></span>
+                                            <span class="text-xs text-slate-400 font-medium" x-text="prod.stock + ' ' + (prod.unit === 'kg' ? 'kg' : 'unidades')"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right flex items-center gap-3">
+                                    <div>
+                                        <div class="font-extrabold text-slate-900 text-sm" x-text="formatCurrency(prod.priceUsd)"></div>
+                                        <div class="text-[10px] text-slate-400" x-text="'Costo: $' + (prod.costUsd || 0).toFixed(2)"></div>
+                                    </div>
+                                    <button @click="openProductModal(prod)" class="p-1.5 text-slate-400 hover:text-brand-blue rounded-lg hover:bg-slate-100">
+                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VISTA 3: FIADOS Y CRÉDITOS ================= -->
+            <section x-show="currentTab === 'fiados'" x-cloak class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-black text-brand-blue">Fiados</h1>
+                        <p class="text-xs text-slate-400 font-medium" x-text="debtorsCount + ' clientes con saldo abierto'"></p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">POR COBRAR</span>
+                        <span class="text-base font-black text-brand-pink" x-text="formatBs(getTotalDebtUsd() * exchangeRate)"></span>
+                    </div>
+                </div>
+
+                <button @click="openClientModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 border border-slate-200 transition">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Registrar Nuevo Cliente</span>
+                </button>
+
+                <!-- Tarjetas de Clientes Fiados -->
+                <div class="space-y-3">
+                    <template x-for="client in clients" :key="client.id">
+                        <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-3">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-pink-100 text-brand-pink font-bold flex items-center justify-center text-xs" x-text="getInitials(client.name)"></div>
+                                    <div>
+                                        <h3 class="font-extrabold text-slate-900 text-sm" x-text="client.name"></h3>
+                                        <p class="text-xs text-slate-400 flex items-center gap-1">
+                                            <i data-lucide="phone" class="w-3 h-3"></i>
+                                            <span x-text="client.phone || 'Sin teléfono'"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-base font-black text-slate-900 block" x-text="formatBs(getClientDebtUsd(client.id) * exchangeRate)"></span>
+                                    <span class="text-xs font-bold text-slate-400" x-text="'$ ' + getClientDebtUsd(client.id).toFixed(2)"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-50">
+                                <span class="px-2.5 py-0.5 rounded-full font-bold text-[10px]" :class="getClientDebtUsd(client.id) > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'" x-text="getClientDebtUsd(client.id) > 0 ? '● Saldo Pendiente' : '● Al día'"></span>
+                                <button @click="openClientModal(client)" class="text-slate-400 hover:text-brand-blue font-semibold text-[11px]">Editar Cliente</button>
+                            </div>
+
+                            <!-- Botón Registrar Abono -->
+                            <template x-if="getClientDebtUsd(client.id) > 0">
+                                <button @click="openAbonoModal(client)" class="w-full bg-brand-pink hover:bg-brand-pinkHover text-white font-bold py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-md shadow-brand-pink/20 transition">
+                                    <i data-lucide="receipt" class="w-4 h-4"></i>
+                                    <span>Registrar abono</span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- ================= VISTA 4: ANÁLISIS FINANCIERO ================= -->
+            <section x-show="currentTab === 'analisis'" x-cloak class="space-y-4">
+                <div>
+                    <h1 class="text-2xl font-black text-brand-blue">Análisis financiero</h1>
+                    <p class="text-xs text-slate-400 font-medium">Ganancia real, no solo lo que entró en caja</p>
+                </div>
+
+                <!-- Banner Resumen Rosa -->
+                <div class="bg-gradient-to-r from-brand-pink to-rose-500 rounded-3xl p-4 text-white shadow-lg shadow-brand-pink/20">
+                    <div class="flex items-center gap-2 font-bold text-sm">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                        <span>Resumen</span>
+                    </div>
+                    <p class="text-xs opacity-90">Ventas, costos y ganancias</p>
+                </div>
+
+                <!-- Filtros Período -->
+                <div class="grid grid-cols-3 gap-2 bg-slate-100 p-1 rounded-2xl text-xs font-bold text-center">
+                    <button @click="analyticsPeriod = 'today'" :class="analyticsPeriod === 'today' ? 'bg-brand-blue text-white shadow' : 'text-slate-600'" class="py-2 rounded-xl transition">Hoy</button>
+                    <button @click="analyticsPeriod = '7days'" :class="analyticsPeriod === '7days' ? 'bg-brand-blue text-white shadow' : 'text-slate-600'" class="py-2 rounded-xl transition">7 días</button>
+                    <button @click="analyticsPeriod = '30days'" :class="analyticsPeriod === '30days' ? 'bg-brand-blue text-white shadow' : 'text-slate-600'" class="py-2 rounded-xl transition">30 días</button>
+                </div>
+
+                <!-- Tarjetas Métricas (Fieles al diseño original) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                    <!-- LO QUE VENDIÓ -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-1">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">LO QUE VENDIÓ</span>
+                        <div class="text-xl font-black text-slate-900" x-text="formatBs(getMetrics().salesUsd * exchangeRate)"></div>
+                        <div class="text-xs font-bold text-slate-400" x-text="'$ ' + getMetrics().salesUsd.toFixed(2)"></div>
+                        <p class="text-[11px] text-slate-400 pt-1" x-text="getMetrics().salesCount + ' ventas realizadas'"></p>
+                    </div>
+
+                    <!-- LO QUE LE COSTÓ -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-1">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">LO QUE LE COSTÓ</span>
+                        <div class="text-xl font-black text-slate-900" x-text="formatBs(getMetrics().costUsd * exchangeRate)"></div>
+                        <div class="text-xs font-bold text-slate-400" x-text="'$ ' + getMetrics().costUsd.toFixed(2)"></div>
+                        <p class="text-[11px] text-slate-400 pt-1">Lo que pagó al proveedor</p>
+                    </div>
+
+                    <!-- COBROS DE FIADO -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-1">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">COBROS DE FIADO</span>
+                        <div class="text-xl font-black text-slate-900" x-text="formatBs(getMetrics().abonosUsd * exchangeRate)"></div>
+                        <div class="text-xs font-bold text-slate-400" x-text="'$ ' + getMetrics().abonosUsd.toFixed(2)"></div>
+                        <p class="text-[11px] text-slate-400 pt-1" x-text="getMetrics().abonosCount + ' abonos cobrados en el período'"></p>
+                    </div>
+
+                    <!-- LO QUE GANÓ -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-2">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">LO QUE GANÓ</span>
+                        <div class="text-2xl font-black text-emerald-600" x-text="formatBs(getMetrics().profitUsd * exchangeRate)"></div>
+                        <div class="text-xs font-bold text-slate-400" x-text="'$ ' + getMetrics().profitUsd.toFixed(2)"></div>
+                        <p class="text-[11px] text-slate-400">Ganancia neta real (Ventas - Costos)</p>
+
+                        <!-- Alerta costo no cargado -->
+                        <div class="bg-rose-50 border border-rose-100 rounded-2xl p-2.5 text-[11px] text-rose-700 leading-tight">
+                            Algunos productos vendidos no tienen costo cargado — esta ganancia está estimada según inventario.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- NAV BAR INFERIOR (MÓVIL Y ESCRITORIO) -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto bg-brand-blue text-white rounded-t-3xl shadow-2xl z-40 px-6 py-2">
+            <div class="flex justify-around items-center relative">
+                <!-- Vender -->
+                <button @click="currentTab = 'vender'" :class="currentTab === 'vender' ? 'text-white' : 'text-slate-400 hover:text-white'" class="flex flex-col items-center py-1 font-medium transition">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                    <span class="text-[10px] mt-1 font-bold">Vender</span>
+                </button>
+
+                <!-- Inventario -->
+                <button @click="currentTab = 'inventario'" :class="currentTab === 'inventario' ? 'text-white' : 'text-slate-400 hover:text-white'" class="flex flex-col items-center py-1 font-medium transition">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    <span class="text-[10px] mt-1 font-bold">Inventario</span>
+                </button>
+
+                <!-- Botón Flotante Central Inicio/Cobro -->
+                <div class="-mt-8">
+                    <button @click="currentTab = 'vender'" class="w-14 h-14 rounded-full bg-white text-brand-blue flex flex-col items-center justify-center shadow-xl border-4 border-slate-100 hover:scale-105 transition">
+                        <i data-lucide="home" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Fiados -->
+                <button @click="currentTab = 'fiados'" :class="currentTab === 'fiados' ? 'text-white' : 'text-slate-400 hover:text-white'" class="flex flex-col items-center py-1 font-medium transition">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="text-[10px] mt-1 font-bold">Fiados</span>
+                </button>
+
+                <!-- Análisis -->
+                <button @click="currentTab = 'analisis'" :class="currentTab === 'analisis' ? 'text-white' : 'text-slate-400 hover:text-white'" class="flex flex-col items-center py-1 font-medium transition">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="text-[10px] mt-1 font-bold">Análisis</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ================= MODALES ================= -->
+
+        <!-- MODAL: SELECCIONAR PRODUCTOS AL CARRITO -->
+        <div x-show="openProductSelectorModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+            <div @click.away="openProductSelectorModal = false" class="bg-white w-full md:max-w-lg rounded-t-3xl md:rounded-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900 text-lg">Seleccionar Producto</h3>
+                    <button @click="openProductSelectorModal = false" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+                </div>
+                <div class="p-4 space-y-3 flex-1 overflow-y-auto">
+                    <input type="text" x-model="modalSearch" placeholder="Buscar por nombre..." class="w-full bg-slate-100 border-0 rounded-2xl p-3 text-sm focus:ring-2 focus:ring-brand-pink">
+                    <div class="divide-y divide-slate-100">
+                        <template x-for="prod in products.filter(p => p.name.toLowerCase().includes(modalSearch.toLowerCase()))" :key="prod.id">
+                            <div class="py-3 flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm" x-text="prod.name"></h4>
+                                    <p class="text-xs text-slate-400" x-text="formatCurrency(prod.priceUsd) + ' · Stock: ' + prod.stock + ' ' + prod.unit"></p>
+                                </div>
+                                <button @click="addToCart(prod); openProductSelectorModal = false" class="bg-brand-pink text-white text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-brand-pinkHover">
+                                    + Agregar
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
         </div>
-    </header>
 
-    <div class="container">
-        <!-- Sección de Inventario / Catálogo -->
-        <div class="card">
-            <h2>Inventario y Disponibilidad</h2>
-            <input type="text" id="buscarProducto" placeholder="Buscar por nombre o categoría..." onkeyup="filtrarProductos()">
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Categoría / Subcategoría</th>
-                        <th>Stock</th>
-                        <th>Precio (USD)</th>
-                    </tr>
-                </thead>
-                <тельное id="tablaInventario">
-                    <!-- Dinámico desde JS -->
-                </__tbody>
-            </table>
+        <!-- MODAL: AGREGAR / EDITAR PRODUCTO EN INVENTARIO -->
+        <div x-show="openProductEditModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div @click.away="openProductEditModal = false" class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
+                <h3 class="font-extrabold text-slate-900 text-lg" x-text="editingProduct.id ? 'Editar Producto' : 'Nuevo Producto'"></h3>
+                
+                <form @submit.prevent="saveProduct()" class="space-y-3 text-xs">
+                    <div>
+                        <label class="font-bold text-slate-600">Nombre del producto</label>
+                        <input type="text" x-model="editingProduct.name" required class="w-full mt-1 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="font-bold text-slate-600">Categoría</label>
+                            <select x-model="editingProduct.category" class="w-full mt-1 border border-slate-200 rounded-xl p-2.5 text-xs bg-white">
+                                <template x-for="cat in categories" :key="cat">
+                                    <option :value="cat" x-text="cat"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-600">Unidad de Medida</label>
+                            <select x-model="editingProduct.unit" class="w-full mt-1 border border-slate-200 rounded-xl p-2.5 text-xs bg-white">
+                                <option value="unids">Unidad (unids)</option>
+                                <option value="kg font-bold">Peso (Kg)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="font-bold text-slate-600">Stock Actual</label>
+                            <input type="number" step="0.01" x-model.number="editingProduct.stock" required class="w-full mt-1 border border-slate-200 rounded-xl p-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-600">Costo ($)</label>
+                            <input type="number" step="0.01" x-model.number="editingProduct.costUsd" required class="w-full mt-1 border border-slate-200 rounded-xl p-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-600">Precio Venta ($)</label>
+                            <input type="number" step="0.01" x-model.number="editingProduct.priceUsd" required class="w-full mt-1 border border-slate-200 rounded-xl p-2 text-xs">
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex justify-end gap-2">
+                        <template x-if="editingProduct.id">
+                            <button type="button" @click="deleteProduct(editingProduct.id)" class="mr-auto text-red-500 hover:underline font-semibold">Eliminar</button>
+                        </template>
+                        <button type="button" @click="openProductEditModal = false" class="px-4 py-2 rounded-xl bg-slate-100 font-bold text-slate-600">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-blue text-white font-bold">Guardar</button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <!-- Panel de Administración (Solo visible para Rol Administrador) -->
-        <div class="card" id="panelAdmin" style="display: none;">
-            <h2>Gestión de Artículos (Admin)</h2>
-            <form id="formProducto">
-                <label>Nombre del Producto</label>
-                <input type="text" id="nombreProd" required>
+        <!-- MODAL: PROCESAR COBRO / VENTA -->
+        <div x-show="openCheckoutModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div @click.away="openCheckoutModal = false" class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
+                <h3 class="font-extrabold text-slate-900 text-lg">Confirmar Venta</h3>
+                
+                <div class="bg-slate-50 p-3 rounded-2xl border text-center">
+                    <span class="text-xs text-slate-400 font-bold uppercase">Monto Total</span>
+                    <div class="text-2xl font-black text-brand-blue" x-text="formatBs(getCartTotalUsd() * exchangeRate)"></div>
+                    <div class="text-xs font-bold text-slate-500" x-text="'$ ' + getCartTotalUsd().toFixed(2)"></div>
+                </div>
 
-                <label>Categoría Principal / Subcategoría</label>
-                <select id="categoriaProd">
-                    <option value="Víveres > Granos">Víveres > Granos</option>
-                    <option value="Víveres > Harinas">Víveres > Harinas</option>
-                    <option value="Bebidas">Bebidas</option>
-                    <option value="Limpieza">Limpieza</option>
-                    <option value="Ferretería">Ferretería</option>
-                </select>
+                <div class="space-y-3">
+                    <label class="font-bold text-xs text-slate-600 block">Tipo de Pago</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" @click="checkoutType = 'contado'" :class="checkoutType === 'contado' ? 'border-brand-blue bg-blue-50 text-brand-blue font-bold' : 'border-slate-200 text-slate-600'" class="p-3 border rounded-2xl text-xs text-center">
+                            Contado / Efectivo
+                        </button>
+                        <button type="button" @click="checkoutType = 'credito'" :class="checkoutType === 'credito' ? 'border-brand-pink bg-pink-50 text-brand-pink font-bold' : 'border-slate-200 text-slate-600'" class="p-3 border rounded-2xl text-xs text-center">
+                            Fiado / Crédito
+                        </button>
+                    </div>
 
-                <label>Stock Inicial</label>
-                <input type="number" id="stockProd" step="any" required>
+                    <template x-if="checkoutType === 'credito'">
+                        <div class="space-y-1">
+                            <label class="font-bold text-xs text-slate-600">Seleccionar Cliente</label>
+                            <select x-model="selectedClientId" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs bg-white">
+                                <option value="">-- Elija un cliente --</option>
+                                <template x-for="c in clients" :key="c.id">
+                                    <option :value="c.id" x-text="c.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </template>
+                </div>
 
-                <label>Precio ($)</label>
-                <input type="number" id="precioProd" step="0.01" required>
-
-                <button type="submit" class="btn">Guardar Producto</button>
-            </form>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" @click="openCheckoutModal = false" class="px-4 py-2 rounded-xl bg-slate-100 font-bold text-slate-600 text-xs">Cancelar</button>
+                    <button type="button" @click="completeSale()" class="px-5 py-2 rounded-xl bg-brand-pink hover:bg-brand-pinkHover text-white font-bold text-xs shadow-md">Finalizar Venta</button>
+                </div>
+            </div>
         </div>
+
+        <!-- MODAL: REGISTRAR ABONO FIADO -->
+        <div x-show="openAbonoModalState" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div @click.away="openAbonoModalState = false" class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+                <h3 class="font-extrabold text-slate-900 text-lg">Registrar Abono</h3>
+                <p class="text-xs text-slate-500" x-text="'Cliente: ' + (activeClient ? activeClient.name : '')"></p>
+
+                <div>
+                    <label class="font-bold text-xs text-slate-600">Monto del abono (USD)</label>
+                    <input type="number" step="0.01" x-model.number="abonoAmountUsd" class="w-full mt-1 border border-slate-200 rounded-xl p-2.5 text-sm font-bold">
+                    <p class="text-[11px] text-slate-400 mt-1" x-text="'Equivalente: ' + formatBs(abonoAmountUsd * exchangeRate)"></p>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" @click="openAbonoModalState = false" class="px-4 py-2 rounded-xl bg-slate-100 font-bold text-slate-600 text-xs">Cancelar</button>
+                    <button type="button" @click="saveAbono()" class="px-5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs">Guardar Abono</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: CREAR / EDITAR CLIENTE -->
+        <div x-show="openClientModalState" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div @click.away="openClientModalState = false" class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+                <h3 class="font-extrabold text-slate-900 text-lg" x-text="editingClient.id ? 'Editar Cliente' : 'Nuevo Cliente'"></h3>
+                
+                <form @submit.prevent="saveClient()" class="space-y-3 text-xs">
+                    <div>
+                        <label class="font-bold text-slate-600">Nombre Completo</label>
+                        <input type="text" x-model="editingClient.name" required class="w-full mt-1 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="font-bold text-slate-600">Teléfono</label>
+                        <input type="text" x-model="editingClient.phone" placeholder="0412-1234567" class="w-full mt-1 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" @click="openClientModalState = false" class="px-4 py-2 rounded-xl bg-slate-100 font-bold text-slate-600">Cancelar</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl bg-brand-blue text-white font-bold">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Script de Lógica con Supabase -->
+    <!-- LOGICA ALPINE.JS Y SCRIPT DE APLICACION -->
     <script>
-        // Configuración de Supabase (Reemplaza con tus credenciales)
-        const SUPABASE_URL = 'TU_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        function bodegApp() {
+            return {
+                currentTab: 'vender',
+                exchangeRate: 855.66,
+                showInBs: true,
+                searchQuery: '',
+                modalSearch: '',
+                selectedCategoryFilter: 'todas',
+                analyticsPeriod: '30days',
 
-        // Simulación de Rol Actual (Puede venir de la sesión de Supabase Auth o metadata)
-        // Cambia a 'admin' para ver el panel de administración completo.
-        const rolActual = 'cajero'; // Opciones: 'admin', 'cajero'
+                // Categorías de tu negocio
+                categories: ['Víveres', 'Charcutería', 'Frutas y Hortalizas', 'Chuchería', 'Chocolates', 'Bebidas'],
 
-        async function initApp() {
-            document.getElementById('rolUsuarioBadge').innerText = `Rol: ${rolActual.toUpperCase()}`;
-            
-            if (rolActual === 'admin') {
-                document.getElementById('panelAdmin').style.display = 'block';
-            }
+                // Estados de modales
+                openProductSelectorModal: false,
+                openProductEditModal: false,
+                openCheckoutModal: false,
+                openAbonoModalState: false,
+                openClientModalState: false,
 
-            await cargarInventario();
-        }
+                // Carrito
+                cart: [],
 
-        async function cargarInventario() {
-            const tbody = document.getElementById('tablaInventario');
-            tbody.innerHTML = '<tr><td colspan="4">Cargando inventario...</td></tr>';
+                // checkout
+                checkoutType: 'contado',
+                selectedClientId: '',
 
-            // Consulta a Supabase
-            const { data, error } = await _supabase
-                .from('productos')
-                .select('*, categorias(nombre)')
-                .order('nombre', { ascending: true });
+                // Abono
+                activeClient: null,
+                abonoAmountUsd: 0,
 
-            if (error) {
-                console.error('Error al cargar inventario:', error);
-                // Datos de prueba en caso de que la BD esté vacía o en desarrollo
-                renderizarTabla([
-                    { nombre: 'Harina P.A.N.', categorias: { nombre: 'Víveres > Harinas' }, stock_actual: 120, precio_usd: 1.20, disponible: true },
-                    { nombre: 'Aceite Comestible 1L', categorias: { nombre: 'Víveres > Aceites' }, stock_actual: 22, precio_usd: 3.20, disponible: true },
-                    { nombre: 'Cloro Líquido 1L', categorias: { nombre: 'Limpieza' }, stock_actual: 2, precio_usd: 1.10, disponible: true }
-                ]);
-                return;
-            }
+                // Modelos en edición
+                editingProduct: { id: null, name: '', category: 'Víveres', unit: 'unids', stock: 0, costUsd: 0, priceUsd: 0 },
+                editingClient: { id: null, name: '', phone: '' },
 
-            renderizarTabla(data);
-        }
+                // Datos Persistentes (Semilla Inicial Fiel a las capturas)
+                products: [
+                    { id: '1', name: 'Harina P.A.N.', category: 'Víveres', unit: 'unids', stock: 120, costUsd: 0.90, priceUsd: 1.10 },
+                    { id: '2', name: 'Pasta Larga Plumrose', category: 'Víveres', unit: 'unids', stock: 95, costUsd: 0.80, priceUsd: 1.00 },
+                    { id: '3', name: 'Savoy Chocolate Leche', category: 'Chocolates', unit: 'unids', stock: 55, costUsd: 0.65, priceUsd: 0.85 },
+                    { id: '4', name: 'Pirulín 240g', category: 'Chuchería', unit: 'unids', stock: 30, costUsd: 2.10, priceUsd: 2.60 },
+                    { id: '5', name: 'Toddy 400g', category: 'Chuchería', unit: 'unids', stock: 45, costUsd: 1.50, priceUsd: 1.95 },
+                    { id: '6', name: 'Queso Paisa (Kg)', category: 'Charcutería', unit: 'kg', stock: 15.5, costUsd: 4.50, priceUsd: 6.00 },
+                    { id: '7', name: 'Jamón de Pierna (Kg)', category: 'Charcutería', unit: 'kg', stock: 10.0, costUsd: 5.00, priceUsd: 7.20 },
+                    { id: '8', name: 'Tomate Manzana (Kg)', category: 'Frutas y Hortalizas', unit: 'kg', stock: 25.0, costUsd: 1.00, priceUsd: 1.50 }
+                ],
 
-        function renderizarTabla(productos) {
-            const tbody = document.getElementById('tablaInventario');
-            tbody.innerHTML = '';
+                clients: [
+                    { id: 'c1', name: 'María Villalba', phone: '0412-1234567' },
+                    { id: 'c2', name: 'Luis Colmenares', phone: '0414-7654321' }
+                ],
 
-            productos.forEach(p => {
-                const tr = document.createElement('tr');
-                const stockClase = p.stock_actual > 5 ? 'stock-ok' : 'stock-low';
-                
-                tr.innerHTML = `
-                    <td><strong>${p.nombre}</strong></td>
-                    <td>${p.categorias?.nombre || 'General'}</td>
-                    <td><span class="badge-stock ${stockClase}">${p.stock_actual} unids</span></td>
-                    <td>$${p.precio_usd.toFixed(2)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+                sales: [
+                    { id: 's1', date: new Date().toISOString(), totalUsd: 21.75, costUsd: 15.75, type: 'contado' }
+                ],
 
-        // Lógica para el Administrador al guardar un producto
-        document.getElementById('formProducto').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (rolActual !== 'admin') {
-                alert('No tienes permisos de Administrador para realizar esta acción.');
-                return;
-            }
+                abonos: [
+                    { id: 'a1', clientId: 'c1', date: new Date().toISOString(), amountUsd: 1.00 }
+                ],
 
-            const nuevoProducto = {
-                nombre: document.getElementById('nombreProd').value,
-                stock_actual: parseFloat(document.getElementById('stockProd').value),
-                precio_usd: parseFloat(document.getElementById('precioProd').value),
-                disponible: true
+                debts: [
+                    { id: 'd1', clientId: 'c1', totalUsd: 3.75 },
+                    { id: 'd2', clientId: 'c2', totalUsd: 3.00 }
+                ],
+
+                initApp() {
+                    const saved = localStorage.getItem('bodegapp_data');
+                    if (saved) {
+                        try {
+                            const parsed = JSON.parse(saved);
+                            this.products = parsed.products || this.products;
+                            this.clients = parsed.clients || this.clients;
+                            this.sales = parsed.sales || this.sales;
+                            this.abonos = parsed.abonos || this.abonos;
+                            this.debts = parsed.debts || this.debts;
+                            this.exchangeRate = parsed.exchangeRate || 855.66;
+                        } catch(e) { console.error("Error al cargar datos", e); }
+                    }
+                    this.$watch('cart', () => this.saveState());
+                    setTimeout(() => lucide.createIcons(), 100);
+                },
+
+                saveState() {
+                    localStorage.setItem('bodegapp_data', JSON.stringify({
+                        products: this.products,
+                        clients: this.clients,
+                        sales: this.sales,
+                        abonos: this.abonos,
+                        debts: this.debts,
+                        exchangeRate: this.exchangeRate
+                    }));
+                },
+
+                // Getters e Invocaciones
+                get filteredProducts() {
+                    return this.products.filter(p => {
+                        const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        const matchesCat = this.selectedCategoryFilter === 'todas' || p.category === this.selectedCategoryFilter;
+                        return matchesSearch && matchesCat;
+                    });
+                },
+
+                get debtorsCount() {
+                    return this.debts.filter(d => d.totalUsd > 0).length;
+                },
+
+                toggleCurrencyDisplay() {
+                    this.showInBs = !this.showInBs;
+                },
+
+                formatCurrency(valUsd) {
+                    if (this.showInBs) {
+                        return 'Bs ' + (valUsd * this.exchangeRate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+                    return '$ ' + valUsd.toFixed(2);
+                },
+
+                formatBs(valBs) {
+                    return 'Bs ' + valBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                },
+
+                getInitials(name) {
+                    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                },
+
+                getTotalInventoryCapitalUsd() {
+                    return this.products.reduce((acc, p) => acc + (p.costUsd * p.stock), 0);
+                },
+
+                // Carrito
+                addToCart(product) {
+                    const existing = this.cart.find(i => i.id === product.id);
+                    if (existing) {
+                        existing.qty += (product.unit === 'kg' ? 0.5 : 1);
+                    } else {
+                        this.cart.push({
+                            id: product.id,
+                            name: product.name,
+                            priceUsd: product.priceUsd,
+                            costUsd: product.costUsd,
+                            unit: product.unit,
+                            qty: product.unit === 'kg' ? 0.5 : 1
+                        });
+                    }
+                },
+
+                updateCartQty(index, delta) {
+                    const item = this.cart[index];
+                    const step = item.unit === 'kg' ? 0.1 : 1;
+                    item.qty = Math.max(0.01, parseFloat((item.qty + (delta * step)).toFixed(2)));
+                },
+
+                removeFromCart(index) {
+                    this.cart.splice(index, 1);
+                },
+
+                getCartTotalUsd() {
+                    return this.cart.reduce((sum, item) => sum + (item.priceUsd * item.qty), 0);
+                },
+
+                getCartTotalCostUsd() {
+                    return this.cart.reduce((sum, item) => sum + ((item.costUsd || 0) * item.qty), 0);
+                },
+
+                prepareCheckout() {
+                    if (this.cart.length === 0) return;
+                    this.openCheckoutModal = true;
+                },
+
+                completeSale() {
+                    const totalUsd = this.getCartTotalUsd();
+                    const costUsd = this.getCartTotalCostUsd();
+
+                    if (this.checkoutType === 'credito') {
+                        if (!this.selectedClientId) {
+                            alert("Por favor seleccione un cliente para la venta a crédito.");
+                            return;
+                        }
+                        // Registrar Deuda
+                        let debt = this.debts.find(d => d.clientId === this.selectedClientId);
+                        if (debt) {
+                            debt.totalUsd += totalUsd;
+                        } else {
+                            this.debts.push({ id: 'd_' + Date.now(), clientId: this.selectedClientId, totalUsd: totalUsd });
+                        }
+                    }
+
+                    // Descontar Stock
+                    this.cart.forEach(c => {
+                        const p = this.products.find(prod => prod.id === c.id);
+                        if (p) {
+                            p.stock = Math.max(0, p.stock - c.qty);
+                        }
+                    });
+
+                    // Registrar Venta
+                    this.sales.push({
+                        id: 's_' + Date.now(),
+                        date: new Date().toISOString(),
+                        totalUsd: totalUsd,
+                        costUsd: costUsd,
+                        type: this.checkoutType,
+                        clientId: this.selectedClientId || null
+                    });
+
+                    this.cart = [];
+                    this.openCheckoutModal = false;
+                    this.saveState();
+                    this.currentTab = 'analisis';
+                    setTimeout(() => lucide.createIcons(), 100);
+                },
+
+                // Fiados
+                getClientDebtUsd(clientId) {
+                    const debt = this.debts.find(d => d.clientId === clientId);
+                    return debt ? debt.totalUsd : 0;
+                },
+
+                getTotalDebtUsd() {
+                    return this.debts.reduce((sum, d) => sum + d.totalUsd, 0);
+                },
+
+                openAbonoModal(client) {
+                    this.activeClient = client;
+                    this.abonoAmountUsd = 0;
+                    this.openAbonoModalState = true;
+                },
+
+                saveAbono() {
+                    if (this.abonoAmountUsd <= 0 || !this.activeClient) return;
+                    let debt = this.debts.find(d => d.clientId === this.activeClient.id);
+                    if (debt) {
+                        debt.totalUsd = Math.max(0, debt.totalUsd - this.abonoAmountUsd);
+                    }
+                    this.abonos.push({
+                        id: 'a_' + Date.now(),
+                        clientId: this.activeClient.id,
+                        date: new Date().toISOString(),
+                        amountUsd: this.abonoAmountUsd
+                    });
+
+                    this.openAbonoModalState = false;
+                    this.saveState();
+                },
+
+                // Gestión Producto Modal
+                openProductModal(product = null) {
+                    if (product) {
+                        this.editingProduct = JSON.parse(JSON.stringify(product));
+                    } else {
+                        this.editingProduct = { id: null, name: '', category: 'Víveres', unit: 'unids', stock: 0, costUsd: 0, priceUsd: 0 };
+                    }
+                    this.openProductEditModal = true;
+                },
+
+                saveProduct() {
+                    if (this.editingProduct.id) {
+                        const index = this.products.findIndex(p => p.id === this.editingProduct.id);
+                        if (index !== -1) this.products[index] = { ...this.editingProduct };
+                    } else {
+                        this.products.push({
+                            ...this.editingProduct,
+                            id: 'p_' + Date.now()
+                        });
+                    }
+                    this.openProductEditModal = false;
+                    this.saveState();
+                },
+
+                deleteProduct(id) {
+                    this.products = this.products.filter(p => p.id !== id);
+                    this.openProductEditModal = false;
+                    this.saveState();
+                },
+
+                // Gestión Cliente Modal
+                openClientModal(client = null) {
+                    if (client) {
+                        this.editingClient = JSON.parse(JSON.stringify(client));
+                    } else {
+                        this.editingClient = { id: null, name: '', phone: '' };
+                    }
+                    this.openClientModalState = true;
+                },
+
+                saveClient() {
+                    if (this.editingClient.id) {
+                        const idx = this.clients.findIndex(c => c.id === this.editingClient.id);
+                        if (idx !== -1) this.clients[idx] = { ...this.editingClient };
+                    } else {
+                        this.clients.push({
+                            ...this.editingClient,
+                            id: 'c_' + Date.now()
+                        });
+                    }
+                    this.openClientModalState = false;
+                    this.saveState();
+                },
+
+                // Métricas de Análisis Financiero
+                getMetrics() {
+                    const salesUsd = this.sales.reduce((sum, s) => sum + s.totalUsd, 0);
+                    const costUsd = this.sales.reduce((sum, s) => sum + (s.costUsd || 0), 0);
+                    const abonosUsd = this.abonos.reduce((sum, a) => sum + a.amountUsd, 0);
+                    const profitUsd = salesUsd - costUsd;
+
+                    return {
+                        salesUsd,
+                        costUsd,
+                        abonosUsd,
+                        profitUsd,
+                        salesCount: this.sales.length,
+                        abonosCount: this.abonos.length
+                    };
+                }
             };
-
-            const { error } = await _supabase.from('productos').insert([nuevoProducto]);
-            
-            if (error) {
-                alert('Error al guardar el producto: ' + error.message);
-            } else {
-                alert('¡Producto guardado con éxito!');
-                document.getElementById('formProducto').reset();
-                cargarInventario();
-            }
-        });
-
-        function filtrarProductos() {
-            // Lógica rápida de filtro visual en cliente
-            const filtro = document.getElementById('buscarProducto').value.toLowerCase();
-            const filas = document.querySelectorAll('#tablaInventario tr');
-            filas.forEach(fila => {
-                const texto = fila.innerText.toLowerCase();
-                fila.style.display = texto.includes(filtro) ? '' : 'none';
-            });
         }
-
-        // Inicializar aplicación al cargar la ventana
-        window.onload = initApp;
     </script>
 </body>
 </html>
+```
