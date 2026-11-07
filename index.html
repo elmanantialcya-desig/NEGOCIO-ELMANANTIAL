@@ -3,379 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema El Manantial - POS y Gestión</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>POS & Inventario - El Manantial</title>
+    <!-- Supabase Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary-blue: #1a73e8;
+            --text-main: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .user-badge {
+            background: #e8f0fe;
+            color: var(--primary-blue);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h2 { margin-top: 0; font-size: 18px; color: var(--primary-blue); }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+        th { color: var(--text-secondary); background: #fafafa; }
+        .btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+        .btn:hover { background: #1557b0; }
+        .badge-stock {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .stock-ok { background: #e6f4ea; color: #137333; }
+        .stock-low { background: #fce8e6; color: #c5221f; }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+<body>
 
-    <div id="app" class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-blue-600 text-white shadow-md p-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-store text-2xl"></i>
-                <h1 class="text-xl font-bold tracking-wide">El Manantial C.A.</h1>
-            </div>
-            <div class="text-sm bg-blue-700 px-3 py-1 rounded-full shadow-inner flex items-center gap-2">
-                <i class="fa-solid fa-cloud text-green-300"></i> Sistema Sincronizado
-            </div>
-        </header>
+    <header>
+        <h1>Negocio El Manantial</h1>
+        <div>
+            <span id="rolUsuarioBadge" class="user-badge">Cargando rol...</span>
+        </div>
+    </header>
 
-        <!-- Navegación por Pestañas -->
-        <nav class="bg-white border-b border-gray-200 shadow-sm flex overflow-x-auto">
-            <button onclick="cambiarTab('pos')" id="btn-pos" class="tab-btn px-6 py-3 font-medium text-blue-600 border-b-2 border-blue-600 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-cash-register"></i> <span>Punto de Venta</span>
-            </button>
-            <button onclick="cambiarTab('inventario')" id="btn-inventario" class="tab-btn px-6 py-3 font-medium text-gray-500 hover:text-blue-600 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-boxes-stacked"></i> <span>Inventario</span>
-            </button>
-            <button onclick="cambiarTab('fiados')" id="btn-fiados" class="tab-btn px-6 py-3 font-medium text-gray-500 hover:text-blue-600 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-file-invoice-dollar"></i> <span>Fiados y Créditos</span>
-            </button>
-            <button onclick="cambiarTab('analisis')" id="btn-analisis" class="tab-btn px-6 py-3 font-medium text-gray-500 hover:text-blue-600 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-chart-pie"></i> <span>Análisis Financiero</span>
-            </button>
-        </nav>
-
-        <!-- Contenido Principal -->
-        <main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+    <div class="container">
+        <!-- Sección de Inventario / Catálogo -->
+        <div class="card">
+            <h2>Inventario y Disponibilidad</h2>
+            <input type="text" id="buscarProducto" placeholder="Buscar por nombre o categoría..." onkeyup="filtrarProductos()">
             
-            <!-- VISTA PUNTO DE VENTA -->
-            <section id="tab-pos" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <input type="text" id="buscar-producto" oninput="filtrarProductos()" placeholder="Buscar por nombre o código..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div id="grid-productos" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        <!-- Productos generados dinámicamente -->
-                    </div>
-                </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría / Subcategoría</th>
+                        <th>Stock</th>
+                        <th>Precio (USD)</th>
+                    </tr>
+                </thead>
+                <тельное id="tablaInventario">
+                    <!-- Dinámico desde JS -->
+                </__tbody>
+            </table>
+        </div>
 
-                <!-- Carrito de Compras -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-center border-b pb-2 mb-4">
-                            <h2 class="text-lg font-bold text-gray-700"><i class="fa-solid fa-cart-shopping mr-2"></i> Carrito</h2>
-                            <button onclick="vaciarCarrito()" class="text-xs text-red-500 hover:underline">Vaciar</button>
-                        </div>
-                        <div id="lista-carrito" class="space-y-3 max-h-80 overflow-y-auto">
-                            <p class="text-gray-400 text-center py-4">El carrito está vacío</p>
-                        </div>
-                    </div>
-                    <div class="border-t pt-4 mt-4 space-y-2">
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>Subtotal:</span>
-                            <span id="carrito-subtotal">$0.00</span>
-                        </div>
-                        <div class="flex justify-between text-lg font-bold text-blue-900">
-                            <span>TOTAL A PAGAR:</span>
-                            <span id="carrito-total">$0.00</span>
-                        </div>
-                        <div class="flex justify-between text-sm text-gray-500">
-                            <span>Equivalente en Bs (Tasa 30.0):</span>
-                            <span id="carrito-bs">0,00 Bs</span>
-                        </div>
-                        <button onclick="procesarVenta()" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-md">
-                            Cobrar Venta
-                        </button>
-                    </div>
-                </div>
-            </section>
+        <!-- Panel de Administración (Solo visible para Rol Administrador) -->
+        <div class="card" id="panelAdmin" style="display: none;">
+            <h2>Gestión de Artículos (Admin)</h2>
+            <form id="formProducto">
+                <label>Nombre del Producto</label>
+                <input type="text" id="nombreProd" required>
 
-            <!-- VISTA INVENTARIO -->
-            <section id="tab-inventario" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-gray-700">Control de Inventario</h2>
-                    <button onclick="abrirModalProducto()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                        <i class="fa-solid fa-plus mr-1"></i> Nuevo Producto
-                    </button>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b text-gray-600 text-sm">
-                                <th class="p-3">Código</th>
-                                <th class="p-3">Producto</th>
-                                <th class="p-3">Categoría</th>
-                                <th class="p-3">Stock</th>
-                                <th class="p-3">Precio USD</th>
-                                <th class="p-3 text-center">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-inventario-body" class="text-sm divide-y divide-gray-100">
-                            <!-- Contenido dinámico -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                <label>Categoría Principal / Subcategoría</label>
+                <select id="categoriaProd">
+                    <option value="Víveres > Granos">Víveres > Granos</option>
+                    <option value="Víveres > Harinas">Víveres > Harinas</option>
+                    <option value="Bebidas">Bebidas</option>
+                    <option value="Limpieza">Limpieza</option>
+                    <option value="Ferretería">Ferretería</option>
+                </select>
 
-            <!-- VISTA FIADOS / CRÉDITOS -->
-            <section id="tab-fiados" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-lg font-bold text-gray-700">Créditos y Fiados a Clientes</h2>
-                        <p class="text-sm text-gray-500 mt-1">Registra, cobra abonos o elimina cuentas de clientes.</p>
-                    </div>
-                    <button onclick="agregarCliente()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                        <i class="fa-solid fa-user-plus mr-1"></i> Agregar Cliente
-                    </button>
-                </div>
-                <div id="grid-clientes" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Clientes generados dinámicamente -->
-                </div>
-            </section>
+                <label>Stock Inicial</label>
+                <input type="number" id="stockProd" step="any" required>
 
-            <!-- VISTA ANÁLISIS FINANCIERO -->
-            <section id="tab-analisis" class="hidden space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <span class="text-sm text-gray-500">Ventas Realizadas</span>
-                        <h3 id="stat-ventas" class="text-2xl font-bold text-blue-600">$0.00</h3>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <span class="text-sm text-gray-500">Total por Cobrar (Fiados)</span>
-                        <h3 id="stat-fiados" class="text-2xl font-bold text-orange-600">$0.00</h3>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <span class="text-sm text-gray-500">Abonos Recibidos</span>
-                        <h3 id="stat-abonos" class="text-2xl font-bold text-green-600">$0.00</h3>
-                    </div>
-                </div>
-            </section>
+                <label>Precio ($)</label>
+                <input type="number" id="precioProd" step="0.01" required>
 
-        </main>
+                <button type="submit" class="btn">Guardar Producto</button>
+            </form>
+        </div>
     </div>
 
+    <!-- Script de Lógica con Supabase -->
     <script>
-        const TASA_BCV = 30.0;
+        // Configuración de Supabase (Reemplaza con tus credenciales)
+        const SUPABASE_URL = 'TU_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let productos = JSON.parse(localStorage.getItem('manantial_productos')) || [
-            { codigo: 'ALM-001', nombre: 'Harina de Maíz', categoria: 'Viveres', stock: 48, tipo: 'unid', precio: 1.40 },
-            { codigo: 'ALM-002', nombre: 'Arroz Blanco', categoria: 'Viveres', stock: 35, tipo: 'unid', precio: 1.65 },
-            { codigo: 'VER-001', nombre: 'Tomates', categoria: 'Verduras', stock: 12.5, tipo: 'kg', precio: 2.00 }
-        ];
+        // Simulación de Rol Actual (Puede venir de la sesión de Supabase Auth o metadata)
+        // Cambia a 'admin' para ver el panel de administración completo.
+        const rolActual = 'cajero'; // Opciones: 'admin', 'cajero'
 
-        let clientes = JSON.parse(localStorage.getItem('manantial_clientes')) || [
-            { id: 1, nombre: 'María Villalba', deuda: 3.20 }
-        ];
+        async function initApp() {
+            document.getElementById('rolUsuarioBadge').innerText = `Rol: ${rolActual.toUpperCase()}`;
+            
+            if (rolActual === 'admin') {
+                document.getElementById('panelAdmin').style.display = 'block';
+            }
 
-        let ventasTotales = parseFloat(localStorage.getItem('manantial_ventas')) || 0;
-        let abonosTotales = parseFloat(localStorage.getItem('manantial_abonos')) || 0;
-        let carrito = [];
-
-        function guardarDatos() {
-            localStorage.setItem('manantial_productos', JSON.stringify(productos));
-            localStorage.setItem('manantial_clientes', JSON.stringify(clientes));
-            localStorage.setItem('manantial_ventas', ventasTotales);
-            localStorage.setItem('manantial_abonos', abonosTotales);
+            await cargarInventario();
         }
 
-        function cambiarTab(tabId) {
-            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                btn.classList.add('text-gray-500');
+        async function cargarInventario() {
+            const tbody = document.getElementById('tablaInventario');
+            tbody.innerHTML = '<tr><td colspan="4">Cargando inventario...</td></tr>';
+
+            // Consulta a Supabase
+            const { data, error } = await _supabase
+                .from('productos')
+                .select('*, categorias(nombre)')
+                .order('nombre', { ascending: true });
+
+            if (error) {
+                console.error('Error al cargar inventario:', error);
+                // Datos de prueba en caso de que la BD esté vacía o en desarrollo
+                renderizarTabla([
+                    { nombre: 'Harina P.A.N.', categorias: { nombre: 'Víveres > Harinas' }, stock_actual: 120, precio_usd: 1.20, disponible: true },
+                    { nombre: 'Aceite Comestible 1L', categorias: { nombre: 'Víveres > Aceites' }, stock_actual: 22, precio_usd: 3.20, disponible: true },
+                    { nombre: 'Cloro Líquido 1L', categorias: { nombre: 'Limpieza' }, stock_actual: 2, precio_usd: 1.10, disponible: true }
+                ]);
+                return;
+            }
+
+            renderizarTabla(data);
+        }
+
+        function renderizarTabla(productos) {
+            const tbody = document.getElementById('tablaInventario');
+            tbody.innerHTML = '';
+
+            productos.forEach(p => {
+                const tr = document.createElement('tr');
+                const stockClase = p.stock_actual > 5 ? 'stock-ok' : 'stock-low';
+                
+                tr.innerHTML = `
+                    <td><strong>${p.nombre}</strong></td>
+                    <td>${p.categorias?.nombre || 'General'}</td>
+                    <td><span class="badge-stock ${stockClase}">${p.stock_actual} unids</span></td>
+                    <td>$${p.precio_usd.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
             });
-
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`btn-${tabId}`);
-            activeBtn.classList.remove('text-gray-500');
-            activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-
-            if(tabId === 'analisis') renderAnalisis();
         }
 
-        // --- PUNTO DE VENTA ---
-        function renderProductos(lista = productos) {
-            const grid = document.getElementById('grid-productos');
-            grid.innerHTML = lista.map(p => `
-                <div onclick="agregarAlCarrito('${p.codigo}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 hover:border-blue-400 cursor-pointer transition flex flex-col justify-between">
-                    <div>
-                        <span class="text-xs text-gray-400">${p.codigo} - Stock: ${p.stock} ${p.tipo}</span>
-                        <h4 class="font-medium text-sm text-gray-800 mt-1">${p.nombre}</h4>
-                    </div>
-                    <div class="mt-3">
-                        <span class="text-blue-600 font-bold">$${p.precio.toFixed(2)} / ${p.tipo}</span>
-                        <span class="text-xs text-gray-400 block">${(p.precio * TASA_BCV).toFixed(2)} Bs</span>
-                    </div>
-                </div>
-            `).join('');
-        }
+        // Lógica para el Administrador al guardar un producto
+        document.getElementById('formProducto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (rolActual !== 'admin') {
+                alert('No tienes permisos de Administrador para realizar esta acción.');
+                return;
+            }
+
+            const nuevoProducto = {
+                nombre: document.getElementById('nombreProd').value,
+                stock_actual: parseFloat(document.getElementById('stockProd').value),
+                precio_usd: parseFloat(document.getElementById('precioProd').value),
+                disponible: true
+            };
+
+            const { error } = await _supabase.from('productos').insert([nuevoProducto]);
+            
+            if (error) {
+                alert('Error al guardar el producto: ' + error.message);
+            } else {
+                alert('¡Producto guardado con éxito!');
+                document.getElementById('formProducto').reset();
+                cargarInventario();
+            }
+        });
 
         function filtrarProductos() {
-            const query = document.getElementById('buscar-producto').value.toLowerCase();
-            const filtrados = productos.filter(p => p.nombre.toLowerCase().includes(query) || p.codigo.toLowerCase().includes(query));
-            renderProductos(filtrados);
-        }
-
-        function agregarAlCarrito(codigo) {
-            const prod = productos.find(p => p.codigo === codigo);
-            if (!prod) return;
-
-            let cantidadPedida = 1;
-            if (prod.tipo === 'kg') {
-                const inputKg = prompt(`Ingrese la cantidad en Kg para ${prod.nombre}:`, "0.5");
-                if (!inputKg || isNaN(inputKg) || parseFloat(inputKg) <= 0) return;
-                cantidadPedida = parseFloat(inputKg);
-            }
-
-            const enCarrito = carrito.find(i => i.codigo === codigo);
-            if (enCarrito) {
-                enCarrito.cantidad += cantidadPedida;
-            } else {
-                carrito.push({ ...prod, cantidad: cantidadPedida });
-            }
-            renderCarrito();
-        }
-
-        function renderCarrito() {
-            const contenedor = document.getElementById('lista-carrito');
-            if (carrito.length === 0) {
-                contenedor.innerHTML = `<p class="text-gray-400 text-center py-4">El carrito está vacío</p>`;
-                document.getElementById('carrito-subtotal').innerText = '$0.00';
-                document.getElementById('carrito-total').innerText = '$0.00';
-                document.getElementById('carrito-bs').innerText = '0,00 Bs';
-                return;
-            }
-
-            let total = 0;
-            contenedor.innerHTML = carrito.map(item => {
-                const sub = item.precio * item.cantidad;
-                total += sub;
-                return `
-                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-sm">
-                        <div>
-                            <p class="font-medium text-gray-800">${item.nombre}</p>
-                            <span class="text-xs text-gray-500">${item.cantidad} ${item.tipo} x $${item.precio.toFixed(2)}</span>
-                        </div>
-                        <span class="font-bold text-gray-700">$${sub.toFixed(2)}</span>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('carrito-subtotal').innerText = `$${total.toFixed(2)}`;
-            document.getElementById('carrito-total').innerText = `$${total.toFixed(2)}`;
-            document.getElementById('carrito-bs').innerText = `${(total * TASA_BCV).toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
-        }
-
-        function vaciarCarrito() {
-            carrito = [];
-            renderCarrito();
-        }
-
-        function procesarVenta() {
-            if (carrito.length === 0) return alert('El carrito está vacío');
-            
-            carrito.forEach(item => {
-                const p = productos.find(prod => prod.codigo === item.codigo);
-                if (p) p.stock = Math.max(0, p.stock - item.cantidad);
+            // Lógica rápida de filtro visual en cliente
+            const filtro = document.getElementById('buscarProducto').value.toLowerCase();
+            const filas = document.querySelectorAll('#tablaInventario tr');
+            filas.forEach(fila => {
+                const texto = fila.innerText.toLowerCase();
+                fila.style.display = texto.includes(filtro) ? '' : 'none';
             });
-
-            const totalVenta = carrito.reduce((acc, i) => acc + (i.precio * i.cantidad), 0);
-            ventasTotales += totalVenta;
-
-            guardarDatos();
-            renderProductos();
-            renderInventario();
-            vaciarCarrito();
-            alert('¡Venta registrada con éxito!');
         }
 
-        // --- INVENTARIO ---
-        function renderInventario() {
-            const tbody = document.getElementById('tabla-inventario-body');
-            tbody.innerHTML = productos.map((p, index) => `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 text-gray-500">${p.codigo}</td>
-                    <td class="p-3 font-medium text-gray-800">${p.nombre}</td>
-                    <td class="p-3 text-gray-600">${p.categoria}</td>
-                    <td class="p-3 text-gray-600">${p.stock} ${p.tipo}</td>
-                    <td class="p-3 font-bold text-blue-600">$${p.precio.toFixed(2)}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="eliminarProducto(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function abrirModalProducto() {
-            const codigo = prompt("Código del producto (Ej: ALM-004):");
-            if (!codigo) return;
-            const nombre = prompt("Nombre del producto:");
-            if (!nombre) return;
-            const categoria = prompt("Categoría (Viveres, Verduras, Limpieza, etc.):", "Viveres");
-            const stock = parseFloat(prompt("Cantidad inicial en stock:", "10"));
-            const tipo = prompt("Tipo de medida (Escribe 'unid' o 'kg'):", "unid").toLowerCase() === 'kg' ? 'kg' : 'unid';
-            const precio = parseFloat(prompt("Precio de venta en USD ($):", "1.00"));
-
-            productos.push({ codigo, nombre, categoria, stock, tipo, precio });
-            guardarDatos();
-            renderProductos();
-            renderInventario();
-        }
-
-        function eliminarProducto(index) {
-            if (confirm("¿Seguro de eliminar este producto del inventario?")) {
-                productos.splice(index, 1);
-                guardarDatos();
-                renderProductos();
-                renderInventario();
-            }
-        }
-
-        // --- FIADOS / CRÉDITOS ---
-        function renderClientes() {
-            const grid = document.getElementById('grid-clientes');
-            if (clientes.length === 0) {
-                grid.innerHTML = `<p class="text-gray-400 col-span-2">No hay clientes registrados en el sistema de créditos.</p>`;
-                return;
-            }
-
-            grid.innerHTML = clientes.map(c => `
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-gray-800 text-base">${c.nombre}</h3>
-                        <p class="text-sm text-gray-500">Saldo pendiente: <span class="text-red-600 font-bold">$${c.deuda.toFixed(2)} (${(c.deuda * TASA_BCV).toFixed(2)} Bs)</span></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="abonarFiado(${c.id})" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-xs font-semibold transition border border-blue-200">
-                            Abonar
-                        </button>
-                        <button onclick="eliminarCliente(${c.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-xs font-semibold transition border border-red-200">
-                            Eliminar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function agregarCliente() {
-            const nombre = prompt("Nombre completo del cliente:");
-            if (!nombre) return;
-            const deudaInicial = parseFloat(prompt("Deuda inicial en USD ($) (opcional):", "0") || 0);
-
-            clientes.push({ id: Date.now(), nombre, deuda: deudaInicial });
-            guardarDatos();
-            renderClientes();
-        }
-
-        function abonarFiado(id) {
-            const cliente = clientes.find(c => c.id === id);
-            if (!cliente) return;
-
-            const abono = parseFloat(prompt(`Monto del abono para ${cliente.nombre} en USD ($):`));
-            if (!abono || isNaN(abono) || abono <= 0) return;
-
-            cliente.deuda = Math.max(0, cliente.deuda - abono);
-            abonosTotales += abono;
-            guardarDatos();
-            renderClientes();
-            alert(`Abono de $${abono.toFixed(2)} registrado correctamente.`);
-        }
-
-        function eliminarCliente(id) {
-            if (confirm("¿Deseas eliminar este cliente y su registro de cuenta?")) {
-                clientes = clientes.filter(c => c.id !== id);
-  
+        // Inicializar aplicación al cargar la ventana
+        window.onload = initApp;
+    </script>
+</body>
+</html>
