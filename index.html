@@ -304,3 +304,13 @@
                 <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div>
                         <
+ <script>
+function cambiarTab(nombreTab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    const targetTab = document.getElementById(nombreTab);
+    if (targetTab) {
+        targetTab.classList.remove('hidden');
+    }
+}
+</script>
+
